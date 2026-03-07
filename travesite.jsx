@@ -291,8 +291,22 @@ export default function Elsewhere() {
   const [heroFading, setHeroFading] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const containerRef = useRef(null);
   const heroIntervalRef = useRef(null);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+      if (!activeTrip?.images?.length) return;
+      if (e.key === "ArrowLeft") setLightboxIndex(i => (i - 1 + activeTrip.images.length) % activeTrip.images.length);
+      if (e.key === "ArrowRight") setLightboxIndex(i => (i + 1) % activeTrip.images.length);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxOpen, activeTrip?.images?.length]);
 
   const startHeroInterval = useCallback(() => {
     clearInterval(heroIntervalRef.current);
@@ -319,6 +333,7 @@ export default function Elsewhere() {
   }, []);
 
   const navigateTo = (trip) => {
+    setLightboxOpen(false);
     setPageVisible(false);
     setTimeout(() => {
       setActiveTrip(trip);
@@ -329,6 +344,7 @@ export default function Elsewhere() {
   };
 
   const navigateHome = () => {
+    setLightboxOpen(false);
     setPageVisible(false);
     setTimeout(() => {
       setPage("home");
@@ -690,7 +706,16 @@ export default function Elsewhere() {
           <div>
 
             {/* Trip Hero */}
-            <div style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
+            <div
+              style={{
+                height: "100vh", position: "relative", overflow: "hidden",
+                cursor: activeTrip.images?.length ? "pointer" : undefined,
+              }}
+              role={activeTrip.images?.length ? "button" : undefined}
+              tabIndex={activeTrip.images?.length ? 0 : undefined}
+              onClick={activeTrip.images?.length ? () => { setLightboxIndex(0); setLightboxOpen(true); } : undefined}
+              onKeyDown={activeTrip.images?.length ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxIndex(0); setLightboxOpen(true); } } : undefined}
+            >
               <PhotoPlaceholder trip={activeTrip} style={{ width: "100%", height: "100%" }} />
               <div style={{
                 position: "absolute", inset: 0,
@@ -750,13 +775,21 @@ export default function Elsewhere() {
                 <div className="journal-pad" style={{ maxWidth: "1140px", margin: "0 auto", padding: "100px 48px 40px" }}>
                   {activeTrip.images.slice(0, -1).map((_, i) => (
                     <RevealBlock key={i} delay={Math.min(0.18, i * 0.02)} style={{ marginBottom: "32px" }}>
-                      <PhotoPlaceholder
-                        trip={activeTrip}
-                        imageIndex={i}
-                        naturalDimensions
-                        label={undefined}
-                        style={{ width: "100%", borderRadius: "2px" }}
-                      />
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => { setLightboxIndex(i); setLightboxOpen(true); }}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxIndex(i); setLightboxOpen(true); } }}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <PhotoPlaceholder
+                          trip={activeTrip}
+                          imageIndex={i}
+                          naturalDimensions
+                          label={undefined}
+                          style={{ width: "100%", borderRadius: "2px" }}
+                        />
+                      </div>
                       {activeTrip.imageCaptions?.[i] && (
                         <p className="photo-caption">{activeTrip.imageCaptions[i]}</p>
                       )}
@@ -766,7 +799,13 @@ export default function Elsewhere() {
 
                 {/* Full-bleed (last image) */}
                 <RevealBlock style={{ margin: "20px 0 0" }}>
-                  <div style={{ position: "relative" }}>
+                  <div
+                    style={{ position: "relative", cursor: "pointer" }}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { setLightboxIndex(activeTrip.images.length - 1); setLightboxOpen(true); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxIndex(activeTrip.images.length - 1); setLightboxOpen(true); } }}
+                  >
                     <PhotoPlaceholder
                       trip={activeTrip}
                       imageIndex={activeTrip.images.length - 1}
@@ -845,6 +884,77 @@ export default function Elsewhere() {
           </div>
         )}
       </div>
+
+      {/* Lightbox */}
+      {lightboxOpen && page === "trip" && activeTrip?.images?.length > 0 && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photo lightbox"
+          style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(0,0,0,0.92)",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            padding: "48px",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setLightboxOpen(false); }}
+        >
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setLightboxOpen(false)}
+            style={{
+              position: "absolute", top: "20px", right: "24px",
+              background: "none", border: "none", color: "rgba(255,255,255,0.8)",
+              fontSize: "28px", cursor: "pointer", padding: "8px", lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+          {activeTrip.images.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Previous"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i - 1 + activeTrip.images.length) % activeTrip.images.length); }}
+                style={{
+                  position: "absolute", left: "24px", top: "50%", transform: "translateY(-50%)",
+                  background: "rgba(255,255,255,0.1)", border: "none", color: "white",
+                  width: "48px", height: "48px", borderRadius: "50%", fontSize: "24px", cursor: "pointer",
+                }}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                aria-label="Next"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i + 1) % activeTrip.images.length); }}
+                style={{
+                  position: "absolute", right: "24px", top: "50%", transform: "translateY(-50%)",
+                  background: "rgba(255,255,255,0.1)", border: "none", color: "white",
+                  width: "48px", height: "48px", borderRadius: "50%", fontSize: "24px", cursor: "pointer",
+                }}
+              >
+                ›
+              </button>
+            </>
+          )}
+          <img
+            src={activeTrip.images[lightboxIndex]}
+            alt=""
+            style={{ maxWidth: "100%", maxHeight: "calc(100vh - 120px)", objectFit: "contain" }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          {activeTrip.imageCaptions?.[lightboxIndex] && (
+            <p style={{
+              marginTop: "20px", color: "rgba(255,255,255,0.85)", fontFamily: "'Cormorant Garamond', serif",
+              fontStyle: "italic", fontSize: "18px", textAlign: "center", maxWidth: "600px",
+            }}>
+              {activeTrip.imageCaptions[lightboxIndex]}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
