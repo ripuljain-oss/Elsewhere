@@ -120,6 +120,32 @@ const TRIPS = [
     ],
   },
   {
+    id: "Roatan",
+    location: "Roatan",
+    country: "Honduras",
+    year: "2024",
+    tagline: "Caribbean island off the coast of Honduras.",
+    color1: "#0B5C6B",
+    color2: "#1A8FA3",
+    color3: "#7EC8C4",
+    accent: "#E8DCC4",
+    emoji: "🏝️",
+    images: [
+      "/Assets/Roatan/IMG_0692.jpg",
+      "/Assets/Roatan/B3A76398-D187-4E63-B43A-D429C82426D4.jpg",
+      "/Assets/Roatan/IMG_0247.jpg",
+      "/Assets/Roatan/IMG_0259.jpg",
+      "/Assets/Roatan/IMG_0265.jpg",
+      "/Assets/Roatan/IMG_0271.jpg",
+      "/Assets/Roatan/IMG_0283.jpg",
+      "/Assets/Roatan/IMG_0327.jpg",
+      "/Assets/Roatan/IMG_1117.jpg",
+    ],
+    imageCaptions: [
+      null, null, null, null, null, null, null, null, null,
+    ],
+  },
+  {
     id: "Portugal",
     location: "Portugal",
     country: "Portugal",
@@ -728,7 +754,7 @@ export default function Elsewhere() {
                         trip={activeTrip}
                         imageIndex={i}
                         naturalDimensions
-                        label={i === 0 ? "Golden Hour" : undefined}
+                        label={undefined}
                         style={{ width: "100%", borderRadius: "2px" }}
                       />
                       {activeTrip.imageCaptions?.[i] && (
