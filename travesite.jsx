@@ -295,6 +295,7 @@ export default function Elsewhere() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const containerRef = useRef(null);
   const heroIntervalRef = useRef(null);
+  const lightboxTouchStartRef = useRef({ x: 0 });
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -898,6 +899,21 @@ export default function Elsewhere() {
             padding: "48px",
           }}
           onClick={(e) => { if (e.target === e.currentTarget) setLightboxOpen(false); }}
+          onTouchStart={(e) => {
+            if (activeTrip?.images?.length <= 1) return;
+            lightboxTouchStartRef.current = { x: e.touches[0].clientX };
+          }}
+          onTouchEnd={(e) => {
+            if (activeTrip?.images?.length <= 1) return;
+            const touch = e.changedTouches[0];
+            const deltaX = touch.clientX - lightboxTouchStartRef.current.x;
+            const threshold = 50;
+            if (deltaX > threshold) {
+              setLightboxIndex((i) => (i - 1 + activeTrip.images.length) % activeTrip.images.length);
+            } else if (deltaX < -threshold) {
+              setLightboxIndex((i) => (i + 1) % activeTrip.images.length);
+            }
+          }}
         >
           <button
             type="button"
