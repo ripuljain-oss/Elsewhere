@@ -193,7 +193,7 @@ const TRIPS = [
   },
 ];
 
-const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex = 0, naturalDimensions = false }) => {
+const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex = 0, naturalDimensions = false, loading }) => {
   const hasImage = trip.images && trip.images[imageIndex];
   const placeholderStyle = naturalDimensions && !hasImage ? { minHeight: 400 } : {};
   return (
@@ -206,6 +206,7 @@ const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex
         <img
           src={trip.images[imageIndex]}
           alt=""
+          loading={loading}
           style={naturalDimensions ? {
             width: "100%", height: "auto", display: "block", verticalAlign: "top",
           } : {
@@ -663,7 +664,7 @@ export default function Elsewhere() {
                         onMouseLeave={() => setHoveredCard(null)}
                       >
                         <div className="card-photo" style={{ position: "absolute", inset: 0 }}>
-                          <PhotoPlaceholder trip={trip} style={{ width: "100%", height: "100%" }} />
+                          <PhotoPlaceholder trip={trip} style={{ width: "100%", height: "100%" }} loading="lazy" />
                         </div>
                         <div className="card-overlay" />
                         <div className="card-label" style={{
@@ -789,6 +790,7 @@ export default function Elsewhere() {
                           naturalDimensions
                           label={undefined}
                           style={{ width: "100%", borderRadius: "2px" }}
+                          loading="lazy"
                         />
                       </div>
                       {activeTrip.imageCaptions?.[i] && (
@@ -813,6 +815,7 @@ export default function Elsewhere() {
                       naturalDimensions
                       label="Panorama"
                       style={{ width: "100%", borderRadius: "2px" }}
+                      loading="lazy"
                     />
                     <div style={{
                       position: "absolute", inset: 0,
@@ -865,7 +868,7 @@ export default function Elsewhere() {
                         onClick={() => navigateTo(trip)}
                         title={trip.location}
                       >
-                        <PhotoPlaceholder trip={trip} style={{ width: "100%", height: "100%" }} />
+                        <PhotoPlaceholder trip={trip} style={{ width: "100%", height: "100%" }} loading="lazy" />
                       </div>
                     ))}
                   </div>
