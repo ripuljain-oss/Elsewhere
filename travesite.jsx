@@ -142,7 +142,15 @@ const TRIPS = [
       "/Assets/Roatan/IMG_1117.jpg",
     ],
     imageCaptions: [
-      null, null, null, null, null, null, null, null, null,
+      "The reef from above, tracing the edge of the island.",
+      "The dock at dusk, before the last light went.",
+      "Boats tied up on a still morning.",
+      "Every road here leads into the green.",
+      "Two kids watching the last of the day wash in.",
+      "A sailboat at anchor in the quiet before dark.",
+      "Crossing into the canopy.",
+      "The island from the water, palms along the shore.",
+      "Limestone and jungle at the water's edge.",
     ],
   },
   {
