@@ -548,7 +548,7 @@ export default function Elsewhere() {
       setActiveRecent(entry);
       setActiveTrip(null);
       setPage("recent-detail");
-      window.location.hash = `recents/${entry.date}`;
+      window.location.hash = `recents/${entry.slug}`;
       if (containerRef.current) containerRef.current.scrollTop = 0;
       setTimeout(() => setPageVisible(true), 80);
     }, 350);
@@ -558,8 +558,8 @@ export default function Elsewhere() {
     const handleHash = () => {
       const hash = window.location.hash.replace("#", "");
       if (hash.startsWith("recents/")) {
-        const date = hash.replace("recents/", "");
-        const entry = RECENTS.find(r => r.date === date);
+        const slug = hash.replace("recents/", "");
+        const entry = RECENTS.find(r => r.slug === slug);
         if (entry) {
           setActiveRecent(entry);
           setActiveTrip(null);
@@ -1082,7 +1082,7 @@ export default function Elsewhere() {
                 <div className="section-pad" style={{ padding: "0 48px 80px", maxWidth: "1280px", margin: "0 auto" }}>
                   <div className="recents-grid">
                     {RECENTS.slice(0, 3).map((entry, i) => (
-                      <RevealBlock key={entry.date} delay={i * 0.08}>
+                      <RevealBlock key={entry.slug} delay={i * 0.08}>
                         <div className="recent-card" onClick={() => navigateToRecent(entry)}>
                           <div className="recent-image">
                             <img src={entry.image} alt="" loading="lazy" />
@@ -1473,7 +1473,7 @@ export default function Elsewhere() {
 
             <div className="recents-feed">
               {RECENTS.map((entry, i) => (
-                <RevealBlock key={entry.date} delay={Math.min(0.2, i * 0.04)}>
+                <RevealBlock key={entry.slug} delay={Math.min(0.2, i * 0.04)}>
                   <div className="recents-feed-entry">
                     <img
                       src={entry.image}
