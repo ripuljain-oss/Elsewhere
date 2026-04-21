@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "blackhawks-centennial-ot-loss",
+    date: "2026-03-17",
+    image: "/Assets/Recents/IMG_0117.jpg",
+    location: "United Center, Chicago",
+    caption: "Blackhawks fell 4-3 in overtime to the Minnesota Wild, Mats Zuccarello with the winner at 3:09. The jumbotron marks the franchise's 100th anniversary season.",
+  },
+  {
     slug: "pacaya-lava-rock-pizza",
     date: "2026-04-02",
     image: "/Assets/Recents/IMG_0539.jpg",
