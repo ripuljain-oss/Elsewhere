@@ -997,9 +997,11 @@ export default function Elsewhere() {
               }}>
                 <div style={{
                   display: "inline-block",
-                  color: "rgba(200,169,110,0.7)", fontSize: "10px", letterSpacing: "5px",
+                  color: "#D4B77A", fontSize: "13px", letterSpacing: "6px",
                   textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
-                  marginBottom: "24px",
+                  fontWeight: 500,
+                  marginBottom: "28px",
+                  textShadow: "0 2px 12px rgba(0,0,0,0.6)",
                   animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.2s both",
                 }}>
                   {TRIPS[heroIdx].country} · {TRIPS[heroIdx].year}
