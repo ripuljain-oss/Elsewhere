@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { RECENTS } from "./recents";
+import { RECENTS as RECENTS_RAW } from "./recents";
+
+const RECENTS = [...RECENTS_RAW].sort((a, b) => b.date.localeCompare(a.date));
 
 const TRIPS = [
   {
