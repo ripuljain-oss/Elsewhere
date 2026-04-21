@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "pacaya-lava-rock-pizza",
+    date: "2026-04-02",
+    image: "/Assets/Recents/IMG_0539.jpg",
+    location: "Volcán Pacaya, Guatemala",
+    caption: "Summit vendors on the Pacaya hike, known for pizzas baked on lava-rock ovens. Pacaya has been continuously active since 1965 — among Central America's most active volcanoes.",
+  },
+  {
     slug: "antigua-semana-santa",
     date: "2026-04-21",
     image: "/Assets/Recents/IMG_0577.jpg",
