@@ -910,6 +910,7 @@ export default function Elsewhere() {
           .trip-nav { grid-template-columns: 1fr; padding: 0 20px; gap: 16px; }
           .trip-nav-card { height: 160px; }
           header { padding: 16px 20px !important; }
+          .nav-divider, .nav-byline { display: none !important; }
           .recents-grid { grid-template-columns: 1fr; gap: 28px; }
           .recents-feed { padding: 40px 20px 60px; }
           .recents-feed-entry { margin-bottom: 60px; }
@@ -946,8 +947,8 @@ export default function Elsewhere() {
           <span className="nav-item" onClick={navigateToRecents} style={{ cursor: "pointer" }}>
             Recents
           </span>
-          <span style={{ opacity: 0.4 }}>·</span>
-          <span style={{ userSelect: "none" }}>A journal by Ripul Jain</span>
+          <span className="nav-divider" style={{ opacity: 0.4 }}>·</span>
+          <span className="nav-byline" style={{ userSelect: "none" }}>A journal by Ripul Jain</span>
         </div>
       </header>
 
