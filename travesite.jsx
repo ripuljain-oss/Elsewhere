@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { RECENTS } from "./recents";
 
 const TRIPS = [
   {
@@ -371,6 +372,12 @@ const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex
   );
 };
 
+const formatRecentDate = (dateStr) => {
+  const [y, m, d] = dateStr.split("-");
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[parseInt(m,10)-1]} ${parseInt(d,10)}, ${y}`;
+};
+
 function useIntersectionObserver(ref, options = {}) {
   const [isVisible, setIsVisible] = useState(false);
   useEffect(() => {
@@ -411,6 +418,7 @@ export default function Elsewhere() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [imageMeta, setImageMeta] = useState({});
+  const [activeRecent, setActiveRecent] = useState(null);
   const containerRef = useRef(null);
   const heroIntervalRef = useRef(null);
   const lightboxTouchStartRef = useRef({ x: 0 });
@@ -499,7 +507,9 @@ export default function Elsewhere() {
     setPageVisible(false);
     setTimeout(() => {
       setActiveTrip(trip);
+      setActiveRecent(null);
       setPage("trip");
+      if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
       if (containerRef.current) containerRef.current.scrollTop = 0;
       setTimeout(() => setPageVisible(true), 80);
     }, 350);
@@ -510,10 +520,63 @@ export default function Elsewhere() {
     setPageVisible(false);
     setTimeout(() => {
       setPage("home");
+      setActiveRecent(null);
+      setActiveTrip(null);
+      if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
       if (containerRef.current) containerRef.current.scrollTop = 0;
       setTimeout(() => setPageVisible(true), 80);
     }, 350);
   };
+
+  const navigateToRecents = () => {
+    setLightboxOpen(false);
+    setPageVisible(false);
+    setTimeout(() => {
+      setPage("recents");
+      setActiveRecent(null);
+      setActiveTrip(null);
+      window.location.hash = "recents";
+      if (containerRef.current) containerRef.current.scrollTop = 0;
+      setTimeout(() => setPageVisible(true), 80);
+    }, 350);
+  };
+
+  const navigateToRecent = (entry) => {
+    setLightboxOpen(false);
+    setPageVisible(false);
+    setTimeout(() => {
+      setActiveRecent(entry);
+      setActiveTrip(null);
+      setPage("recent-detail");
+      window.location.hash = `recents/${entry.date}`;
+      if (containerRef.current) containerRef.current.scrollTop = 0;
+      setTimeout(() => setPageVisible(true), 80);
+    }, 350);
+  };
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash.startsWith("recents/")) {
+        const date = hash.replace("recents/", "");
+        const entry = RECENTS.find(r => r.date === date);
+        if (entry) {
+          setActiveRecent(entry);
+          setActiveTrip(null);
+          setPage("recent-detail");
+          return;
+        }
+      }
+      if (hash === "recents") {
+        setPage("recents");
+        setActiveRecent(null);
+        setActiveTrip(null);
+      }
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
 
   const changeHero = (i) => {
     setHeroFading(true);
@@ -766,6 +829,68 @@ export default function Elsewhere() {
           padding: 24px;
         }
 
+        .recents-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+        }
+        .recent-card {
+          cursor: pointer;
+          overflow: hidden;
+          position: relative;
+        }
+        .recent-card .recent-image {
+          aspect-ratio: 4 / 3;
+          overflow: hidden;
+          background: #E8E3DA;
+        }
+        .recent-card .recent-image img {
+          width: 100%; height: 100%; object-fit: cover; display: block;
+          transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .recent-card:hover .recent-image img { transform: scale(1.05); }
+        .recent-card .recent-meta {
+          padding: 14px 0 0;
+          font-family: 'DM Sans', sans-serif;
+          color: #8A8780;
+          font-size: 10px;
+          letter-spacing: 2.5px;
+          text-transform: uppercase;
+        }
+
+        .recents-feed {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 60px 48px 100px;
+        }
+        .recents-feed-entry {
+          margin-bottom: 96px;
+        }
+        .recents-feed-entry img {
+          width: 100%;
+          display: block;
+          cursor: pointer;
+        }
+        .recents-feed-entry .entry-meta {
+          margin-top: 18px;
+          padding: 12px 0 0 14px;
+          border-left: 1px solid rgba(200,169,110,0.35);
+          font-family: 'DM Sans', sans-serif;
+          color: #8A8780;
+          font-size: 10px;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+        }
+        .recents-feed-entry .entry-caption {
+          margin-top: 10px;
+          padding-left: 14px;
+          font-family: 'Cormorant Garamond', serif;
+          font-style: italic;
+          color: #8A8780;
+          font-size: 15px;
+          line-height: 1.7;
+        }
+
         @media (max-width: 700px) {
           .masonry-grid { grid-template-columns: 1fr !important; grid-auto-rows: 240px !important; }
           .masonry-grid > div { grid-column: 1 !important; grid-row: span 1 !important; }
@@ -783,6 +908,9 @@ export default function Elsewhere() {
           .trip-nav { grid-template-columns: 1fr; padding: 0 20px; gap: 16px; }
           .trip-nav-card { height: 160px; }
           header { padding: 16px 20px !important; }
+          .recents-grid { grid-template-columns: 1fr; gap: 28px; }
+          .recents-feed { padding: 40px 20px 60px; }
+          .recents-feed-entry { margin-bottom: 60px; }
         }
       `}</style>
 
@@ -807,13 +935,17 @@ export default function Elsewhere() {
           Elsewhere
         </div>
         <div style={{
+          display: "flex", alignItems: "center", gap: "22px",
           fontFamily: "'DM Sans', sans-serif",
           fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
           color: headerNavColor, fontWeight: 400,
           transition: "color 0.5s ease",
-          userSelect: "none",
         }}>
-          A journal by Ripul Jain
+          <span className="nav-item" onClick={navigateToRecents} style={{ cursor: "pointer" }}>
+            Recents
+          </span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <span style={{ userSelect: "none" }}>A journal by Ripul Jain</span>
         </div>
       </header>
 
@@ -917,8 +1049,57 @@ export default function Elsewhere() {
               </div>
             </div>
 
+            {/* Recents section */}
+            {RECENTS.length > 0 && (
+              <>
+                <div className="section-pad" style={{ padding: "88px 48px 36px", maxWidth: "1280px", margin: "0 auto" }}>
+                  <RevealBlock>
+                    <div style={{
+                      display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                      paddingBottom: "22px", borderBottom: "1px solid rgba(26,26,24,0.07)",
+                      gap: "24px",
+                    }}>
+                      <div>
+                        <h2 style={{
+                          fontFamily: "'Cormorant Garamond', serif",
+                          fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 400,
+                          color: "#1A1A18", letterSpacing: "-0.3px",
+                        }}>Recent Photos</h2>
+                        <div style={{
+                          marginTop: "6px",
+                          color: "#8A8780", fontSize: "11px", letterSpacing: "2.5px",
+                          textTransform: "uppercase", fontWeight: 400,
+                        }}>Mostly shot on mobile</div>
+                      </div>
+                      <span onClick={navigateToRecents} className="nav-item" style={{
+                        cursor: "pointer", whiteSpace: "nowrap",
+                        color: "#8A8780", fontSize: "11px", letterSpacing: "2.5px",
+                        textTransform: "uppercase", fontWeight: 400,
+                      }}>See all →</span>
+                    </div>
+                  </RevealBlock>
+                </div>
+                <div className="section-pad" style={{ padding: "0 48px 80px", maxWidth: "1280px", margin: "0 auto" }}>
+                  <div className="recents-grid">
+                    {RECENTS.slice(0, 3).map((entry, i) => (
+                      <RevealBlock key={entry.date} delay={i * 0.08}>
+                        <div className="recent-card" onClick={() => navigateToRecent(entry)}>
+                          <div className="recent-image">
+                            <img src={entry.image} alt="" loading="lazy" />
+                          </div>
+                          <div className="recent-meta">
+                            {formatRecentDate(entry.date)} · {entry.location}
+                          </div>
+                        </div>
+                      </RevealBlock>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* Section header */}
-            <div className="section-pad" style={{ padding: "88px 48px 44px", maxWidth: "1280px", margin: "0 auto" }}>
+            <div className="section-pad" style={{ padding: "40px 48px 44px", maxWidth: "1280px", margin: "0 auto" }}>
               <RevealBlock>
                 <div style={{
                   display: "flex", alignItems: "baseline", justifyContent: "space-between",
@@ -1243,6 +1424,143 @@ export default function Elsewhere() {
             <div style={{ height: "80px" }} />
 
             {/* Footer */}
+            <footer style={{
+              borderTop: "1px solid rgba(26,26,24,0.06)",
+              padding: "30px 48px", textAlign: "center",
+            }}>
+              <p style={{ color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px", textTransform: "uppercase" }}>
+                © 2026 — Elsewhere
+              </p>
+            </footer>
+          </div>
+        )}
+
+        {/* ══════════════════════════════ RECENTS ARCHIVE ══════════════════════════════ */}
+        {page === "recents" && (
+          <div>
+            <div style={{
+              maxWidth: "1140px", margin: "0 auto", padding: "140px 48px 60px",
+              borderBottom: "1px solid rgba(26,26,24,0.08)", textAlign: "center",
+            }}>
+              <RevealBlock>
+                <div style={{
+                  color: "#8A8780", fontSize: "10px", letterSpacing: "5px",
+                  textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
+                  marginBottom: "22px",
+                }}>
+                  Elsewhere · Journal
+                </div>
+                <h1 style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "clamp(3rem, 6vw, 5rem)",
+                  color: "#1A1A18", fontWeight: 300, lineHeight: 1,
+                  letterSpacing: "-1px",
+                }}>
+                  Recent Photos
+                </h1>
+                <div style={{
+                  width: "36px", height: "1px", background: "#C8A96E",
+                  margin: "28px auto",
+                }} />
+                <p style={{
+                  color: "#8A8780", fontSize: "11px", letterSpacing: "3px",
+                  textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  Mostly shot on mobile
+                </p>
+              </RevealBlock>
+            </div>
+
+            <div className="recents-feed">
+              {RECENTS.map((entry, i) => (
+                <RevealBlock key={entry.date} delay={Math.min(0.2, i * 0.04)}>
+                  <div className="recents-feed-entry">
+                    <img
+                      src={entry.image}
+                      alt=""
+                      loading="lazy"
+                      onClick={() => navigateToRecent(entry)}
+                    />
+                    <div className="entry-meta">
+                      {formatRecentDate(entry.date)} · {entry.location}
+                    </div>
+                    <p className="entry-caption">{entry.caption}</p>
+                  </div>
+                </RevealBlock>
+              ))}
+            </div>
+
+            <div style={{ maxWidth: "1140px", margin: "0 auto 80px", padding: "0 48px" }}>
+              <RevealBlock>
+                <div style={{
+                  borderTop: "1px solid rgba(26,26,24,0.08)", paddingTop: "36px",
+                }}>
+                  <span className="back-link" onClick={navigateHome} style={{
+                    fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
+                  }}>
+                    <span className="arrow">←</span> All destinations
+                  </span>
+                </div>
+              </RevealBlock>
+            </div>
+
+            <footer style={{
+              borderTop: "1px solid rgba(26,26,24,0.06)",
+              padding: "30px 48px", textAlign: "center",
+            }}>
+              <p style={{ color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px", textTransform: "uppercase" }}>
+                © 2026 — Elsewhere
+              </p>
+            </footer>
+          </div>
+        )}
+
+        {/* ══════════════════════════════ RECENT DETAIL ══════════════════════════════ */}
+        {page === "recent-detail" && activeRecent && (
+          <div>
+            <div style={{
+              maxWidth: "1140px", margin: "0 auto", padding: "140px 48px 28px",
+            }}>
+              <RevealBlock>
+                <span className="back-link" onClick={navigateToRecents} style={{
+                  fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
+                }}>
+                  <span className="arrow">←</span> All recents
+                </span>
+              </RevealBlock>
+            </div>
+
+            <div style={{ maxWidth: "900px", margin: "0 auto", padding: "0 48px 40px" }}>
+              <RevealBlock>
+                <img
+                  src={activeRecent.image}
+                  alt=""
+                  style={{ width: "100%", display: "block", cursor: "pointer" }}
+                />
+              </RevealBlock>
+            </div>
+
+            <div style={{ maxWidth: "900px", margin: "0 auto 100px", padding: "0 48px" }}>
+              <RevealBlock>
+                <div style={{
+                  padding: "12px 0 0 14px",
+                  borderLeft: "1px solid rgba(200,169,110,0.35)",
+                  fontFamily: "'DM Sans', sans-serif",
+                  color: "#8A8780",
+                  fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
+                }}>
+                  {formatRecentDate(activeRecent.date)} · {activeRecent.location}
+                </div>
+                <p style={{
+                  marginTop: "10px", paddingLeft: "14px",
+                  fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
+                  color: "#8A8780", fontSize: "17px", lineHeight: 1.7, maxWidth: "680px",
+                }}>
+                  {activeRecent.caption}
+                </p>
+              </RevealBlock>
+            </div>
+
             <footer style={{
               borderTop: "1px solid rgba(26,26,24,0.06)",
               padding: "30px 48px", textAlign: "center",
