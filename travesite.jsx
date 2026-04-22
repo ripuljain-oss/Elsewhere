@@ -10,6 +10,8 @@ const TRIPS = [
     country: "Guatemala",
     year: "2026",
     dates: "March 27 – April 5, 2026",
+    heroDate: "March 2026",
+    coords: "N 14.5586°",
     tagline: "Holy Week in a colonial city ringed by volcanoes.",
     intro: "Ten days in Antigua during Semana Santa, with a long weekend on Lake Atitlán. The cobblestones, the incense, the alfombras being swept away by dawn — a city that rebuilds itself every night.",
     coverImage: "/Assets/Guatemala/10-L1004452.jpg",
@@ -60,9 +62,11 @@ const TRIPS = [
   },
   {
     id: "Merida",
-    location: "Merida",
+    location: "Mérida",
     country: "Mexico",
     year: "2025",
+    heroDate: "2025",
+    coords: "N 20.9674°",
     tagline: "The capital of the Yucatan Peninsula.",
     intro: "A slow week in the Yucatán capital. Everything stops for the heat at midday, and the city doesn't really start again until dusk.",
     color1: "#F2C14F", // warm sunlit yellow
@@ -92,6 +96,8 @@ const TRIPS = [
     location: "Olympic National Park",
     country: "United States",
     year: "2025",
+    heroDate: "2025",
+    coords: "N 47.8021°",
     tagline: "Rainforest, coast, and peaks in the Pacific Northwest.",
     intro: "Five days between the rainforest and the coast. The moss underfoot, the fog coming in off the Pacific, the kids finding things we would have walked past.",
     featuredIndices: [15],
@@ -144,6 +150,8 @@ const TRIPS = [
     location: "Panama",
     country: "Panama",
     year: "2025",
+    heroDate: "2025",
+    coords: "N 8.9824°",
     tagline: "Between oceans, high-rises, and jungle.",
     intro: "A week split between Casco Viejo and the hills above the canal. Old stone and new glass, running at the same time.",
     featuredIndices: [3],
@@ -183,9 +191,11 @@ const TRIPS = [
   },
   {
     id: "Roatan",
-    location: "Roatan",
+    location: "Roatán",
     country: "Honduras",
     year: "2024",
+    heroDate: "2024",
+    coords: "N 16.3010°",
     tagline: "Caribbean island off the coast of Honduras.",
     intro: "A long weekend on a reef we'd been meaning to dive for years. Warm water, limestone, and not much else on the schedule.",
     color1: "#0B5C6B",
@@ -221,6 +231,8 @@ const TRIPS = [
     location: "Portugal",
     country: "Portugal",
     year: "2024",
+    heroDate: "2024",
+    coords: "N 38.7223°",
     tagline: "Where the ocean meets the old world.",
     intro: "Ten days from Lisbon to the Algarve. Tile, pine, ocean — and tram 24 most mornings.",
     featuredIndices: [7],
@@ -269,6 +281,8 @@ const TRIPS = [
     location: "Mexico City",
     country: "Mexico",
     year: "2022",
+    heroDate: "2022",
+    coords: "N 19.4326°",
     tagline: "Tacos, stone stelae, and a city too big to leave.",
     intro: "A first visit that turned into a long stay. Museums, tacos, and the slow realization that one week wasn't going to be enough.",
     color1: "#8B2635",
@@ -611,13 +625,6 @@ export default function Elsewhere() {
           transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .trip-card:hover .card-photo { transform: scale(1.05); }
-        .trip-card .gold-line {
-          position: absolute; bottom: 0; left: 0;
-          width: 0; height: 2px;
-          background: linear-gradient(90deg, #C8A96E, #E8D5A3);
-          transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
-        }
-        .trip-card:hover .gold-line { width: 100%; }
         .trip-card .card-overlay {
           position: absolute; inset: 0;
           background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
@@ -707,8 +714,7 @@ export default function Elsewhere() {
           font-size: 15px;
           letter-spacing: 0.3px;
           line-height: 1.7;
-          padding: 14px 0 0 14px;
-          border-left: 1px solid rgba(200,169,110,0.35);
+          padding: 14px 0 0;
           margin-left: 0;
         }
 
@@ -731,7 +737,7 @@ export default function Elsewhere() {
         .block-feature .photo-caption {
           max-width: 1140px;
           margin: 14px auto 0;
-          padding: 14px 48px 0 calc(48px + 14px);
+          padding: 14px 48px 0;
         }
         .pair-grid {
           display: grid;
@@ -771,7 +777,7 @@ export default function Elsewhere() {
         .intro-divider {
           width: 36px;
           height: 1px;
-          background: #C8A96E;
+          background: rgba(42,40,34,0.2);
           margin-top: 40px;
         }
 
@@ -875,8 +881,7 @@ export default function Elsewhere() {
         }
         .recents-feed-entry .entry-meta {
           margin-top: 18px;
-          padding: 12px 0 0 14px;
-          border-left: 1px solid rgba(200,169,110,0.35);
+          padding: 12px 0 0;
           font-family: 'DM Sans', sans-serif;
           color: #8A8780;
           font-size: 10px;
@@ -885,7 +890,7 @@ export default function Elsewhere() {
         }
         .recents-feed-entry .entry-caption {
           margin-top: 10px;
-          padding-left: 14px;
+          padding-left: 0;
           font-family: 'Cormorant Garamond', serif;
           font-style: italic;
           color: #8A8780;
@@ -904,13 +909,18 @@ export default function Elsewhere() {
           .photo-journal { padding: 40px 0 20px; }
           .block-contained { padding: 0 20px; margin-bottom: 36px; }
           .block-feature { margin: 40px 0; }
-          .block-feature .photo-caption { padding: 14px 20px 0 34px; }
+          .block-feature .photo-caption { padding: 14px 20px 0; }
           .pair-grid { grid-template-columns: 1fr; gap: 36px; }
           .intro-block { padding: 60px 20px 20px; }
           .trip-nav { grid-template-columns: 1fr; padding: 0 20px; gap: 16px; }
           .trip-nav-card { height: 160px; }
-          header { padding: 16px 20px !important; }
-          .nav-divider, .nav-byline { display: none !important; }
+          header { padding: 14px 20px !important; }
+          .header-brand { flex-direction: column !important; align-items: flex-start !important; gap: 2px !important; }
+          .header-dash { display: none !important; }
+          .header-author { font-size: 11px !important; }
+          .hero-text { left: 20px !important; right: 20px !important; bottom: 90px !important; }
+          .hero-tagline { font-size: 17px !important; }
+          .hero-dots { bottom: 28px !important; right: 20px !important; }
           .recents-grid { grid-template-columns: 1fr; gap: 28px; }
           .recents-feed { padding: 40px 20px 60px; }
           .recents-feed-entry { margin-bottom: 60px; }
@@ -924,18 +934,29 @@ export default function Elsewhere() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         backdropFilter: scrolled ? "blur(24px) saturate(180%)" : "none",
         background: scrolled ? "rgba(247,244,239,0.88)" : "transparent",
-        borderBottom: scrolled ? "1px solid rgba(200,169,110,0.12)" : "1px solid transparent",
+        borderBottom: scrolled ? "1px solid rgba(26,26,24,0.08)" : "1px solid transparent",
         transition: "all 0.6s cubic-bezier(0.22,1,0.36,1)",
       }}>
-        <div onClick={navigateHome} style={{
+        <div className="header-brand" onClick={navigateHome} style={{
           cursor: "pointer",
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: "13px", letterSpacing: "5px", textTransform: "uppercase",
-          color: headerTextColor, fontWeight: 400,
+          display: "flex", alignItems: "baseline", gap: "14px",
           transition: "color 0.5s ease",
           userSelect: "none",
         }}>
-          Elsewhere
+          <span style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: "13px", letterSpacing: "5px", textTransform: "uppercase",
+            color: headerTextColor, fontWeight: 400,
+          }}>
+            Elsewhere
+          </span>
+          <span className="header-dash" style={{ color: headerNavColor, opacity: 0.4 }}>—</span>
+          <span className="header-author" style={{
+            fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
+            fontSize: "13px", color: headerNavColor, opacity: 0.55,
+          }}>
+            by Ripul Jain
+          </span>
         </div>
         <div style={{
           display: "flex", alignItems: "center", gap: "22px",
@@ -947,8 +968,6 @@ export default function Elsewhere() {
           <span className="nav-item" onClick={navigateToRecents} style={{ cursor: "pointer" }}>
             Recents
           </span>
-          <span className="nav-divider" style={{ opacity: 0.4 }}>·</span>
-          <span className="nav-byline" style={{ userSelect: "none" }}>A journal by Ripul Jain</span>
         </div>
       </header>
 
@@ -992,40 +1011,40 @@ export default function Elsewhere() {
               }} />
 
               {/* Hero text */}
-              <div style={{
-                position: "absolute", bottom: "18%", left: 0, right: 0,
-                textAlign: "center", padding: "0 48px",
+              <div key={TRIPS[heroIdx].id} className="hero-text" style={{
+                position: "absolute", bottom: "44px", left: "48px", right: "48px",
+                maxWidth: "820px",
               }}>
                 <div style={{
-                  display: "inline-block",
-                  color: "#D4B77A", fontSize: "13px", letterSpacing: "6px",
+                  fontSize: "10px", letterSpacing: "3px",
                   textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
-                  fontWeight: 500,
-                  marginBottom: "28px",
-                  textShadow: "0 2px 12px rgba(0,0,0,0.6)",
+                  fontWeight: 400,
+                  color: "rgba(255,255,255,0.65)",
+                  marginBottom: "20px",
                   animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.2s both",
                 }}>
-                  {TRIPS[heroIdx].country} · {TRIPS[heroIdx].year}
+                  <span style={{ color: "#D4B77A" }}>{TRIPS[heroIdx].coords}</span>
+                  {" · "}{TRIPS[heroIdx].location}
+                  {" · "}{TRIPS[heroIdx].country}
+                  {" · "}{TRIPS[heroIdx].heroDate || TRIPS[heroIdx].year}
                 </div>
                 <h1 className="hero-title" style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "clamp(3.2rem, 7.5vw, 7rem)",
-                  fontWeight: 300, color: "white", lineHeight: 1.05,
-                  letterSpacing: "-0.5px",
+                  fontSize: "clamp(3.5rem, 8vw, 7.5rem)",
+                  fontWeight: 300, color: "white", lineHeight: 0.9,
+                  letterSpacing: "-2.5px",
+                  margin: 0,
                   animation: "heroReveal 1.3s cubic-bezier(0.22,1,0.36,1) 0.1s both",
                 }}>
-                  Postcards from<br /><em>elsewhere.</em>
+                  {TRIPS[heroIdx].location}.
                 </h1>
-                <div style={{
-                  width: "32px", height: "1px",
-                  background: "linear-gradient(90deg, transparent, #C8A96E, transparent)",
-                  margin: "28px auto",
-                  animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.5s both",
-                }} />
-                <p style={{
-                  color: "rgba(255,255,255,0.45)", fontSize: "12px", letterSpacing: "3px",
-                  textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif", fontWeight: 300,
-                  animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.6s both",
+                <p className="hero-tagline" style={{
+                  marginTop: "24px",
+                  maxWidth: "540px",
+                  color: "rgba(255,255,255,0.85)",
+                  fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
+                  fontSize: "22px", lineHeight: 1.35,
+                  animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.4s both",
                 }}>
                   {TRIPS[heroIdx].tagline}
                 </p>
@@ -1041,8 +1060,8 @@ export default function Elsewhere() {
               </div>
 
               {/* Dots */}
-              <div style={{
-                position: "absolute", bottom: "6%", left: "50%", transform: "translateX(-50%)",
+              <div className="hero-dots" style={{
+                position: "absolute", bottom: "48px", right: "48px",
                 display: "flex", gap: "10px", alignItems: "center",
               }}>
                 {TRIPS.map((_, i) => (
@@ -1066,9 +1085,9 @@ export default function Elsewhere() {
                     }}>
                       <div>
                         <h2 style={{
-                          fontFamily: "'Cormorant Garamond', serif",
-                          fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 400,
-                          color: "#1A1A18", letterSpacing: "-0.3px",
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontSize: "15px", fontWeight: 500,
+                          color: "#1A1A18", letterSpacing: "0.2px",
                         }}>Recent Photos</h2>
                         <div style={{
                           marginTop: "6px",
@@ -1111,9 +1130,9 @@ export default function Elsewhere() {
                   paddingBottom: "22px", borderBottom: "1px solid rgba(26,26,24,0.07)",
                 }}>
                   <h2 style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 400,
-                    color: "#1A1A18", letterSpacing: "-0.3px",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: "15px", fontWeight: 500,
+                    color: "#1A1A18", letterSpacing: "0.2px",
                   }}>All destinations</h2>
                   <span style={{
                     color: "#8A8780", fontSize: "11px", letterSpacing: "2.5px",
@@ -1160,17 +1179,16 @@ export default function Elsewhere() {
                           padding: "22px 20px 18px",
                         }}>
                           <div style={{
-                            fontFamily: "'Cormorant Garamond', serif",
-                            fontSize: "clamp(1.15rem, 2.2vw, 1.75rem)",
-                            color: "white", fontWeight: 400, letterSpacing: "0.2px", lineHeight: 1.2,
+                            fontFamily: "'DM Sans', sans-serif",
+                            fontSize: "16px",
+                            color: "white", fontWeight: 500, letterSpacing: "0.3px", lineHeight: 1.3,
                           }}>{trip.location}</div>
                           <div style={{
-                            color: "rgba(255,255,255,0.45)", fontSize: "10px",
+                            color: "rgba(255,255,255,0.55)", fontSize: "10px",
                             letterSpacing: "2.5px", textTransform: "uppercase",
                             marginTop: "5px", fontFamily: "'DM Sans', sans-serif",
                           }}>{trip.country} · {trip.year}</div>
                         </div>
-                        <div className="gold-line" />
                       </div>
                     </RevealBlock>
                   );
@@ -1234,7 +1252,7 @@ export default function Elsewhere() {
                 </h1>
                 <div style={{
                   width: "48px", height: "1px",
-                  background: "#C8A96E",
+                  background: "rgba(255,255,255,0.3)",
                   margin: "30px auto 0",
                   animation: "lineGrow 1s cubic-bezier(0.22,1,0.36,1) 0.8s both",
                   transformOrigin: "left",
@@ -1372,9 +1390,9 @@ export default function Elsewhere() {
                         ← Previous
                       </div>
                       <div style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "clamp(1.3rem, 2.2vw, 1.8rem)",
-                        color: "white", fontWeight: 400, lineHeight: 1.2,
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: "16px",
+                        color: "white", fontWeight: 500, letterSpacing: "0.3px", lineHeight: 1.3,
                       }}>
                         {prevTrip.location}
                       </div>
@@ -1408,9 +1426,9 @@ export default function Elsewhere() {
                         Next →
                       </div>
                       <div style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "clamp(1.3rem, 2.2vw, 1.8rem)",
-                        color: "white", fontWeight: 400, lineHeight: 1.2,
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: "16px",
+                        color: "white", fontWeight: 500, letterSpacing: "0.3px", lineHeight: 1.3,
                       }}>
                         {nextTrip.location}
                       </div>
@@ -1464,7 +1482,7 @@ export default function Elsewhere() {
                   Recent Photos
                 </h1>
                 <div style={{
-                  width: "36px", height: "1px", background: "#C8A96E",
+                  width: "36px", height: "1px", background: "rgba(42,40,34,0.2)",
                   margin: "28px auto",
                 }} />
                 <p style={{
@@ -1548,8 +1566,7 @@ export default function Elsewhere() {
             <div style={{ maxWidth: "900px", margin: "0 auto 100px", padding: "0 48px" }}>
               <RevealBlock>
                 <div style={{
-                  padding: "12px 0 0 14px",
-                  borderLeft: "1px solid rgba(200,169,110,0.35)",
+                  padding: "12px 0 0",
                   fontFamily: "'DM Sans', sans-serif",
                   color: "#8A8780",
                   fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
@@ -1557,7 +1574,7 @@ export default function Elsewhere() {
                   {formatRecentDate(activeRecent.date)} · {activeRecent.location}
                 </div>
                 <p style={{
-                  marginTop: "10px", paddingLeft: "14px",
+                  marginTop: "10px",
                   fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
                   color: "#8A8780", fontSize: "17px", lineHeight: 1.7, maxWidth: "680px",
                 }}>
