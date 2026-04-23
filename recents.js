@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "oak-park-hemingway-murals",
+    date: "2026-04-23",
+    image: "/Assets/Recents/IMG_0997.jpg",
+    location: "Oak Park, Illinois",
+    caption: "Mini Murals along the Oak Park Green Line embankment — an Arts Council program running since 2010 with ~230 panels by rotating artists. Several reference Ernest Hemingway, who was born in Oak Park in 1899.",
+  },
+  {
     slug: "blackhawks-centennial-ot-loss",
     date: "2026-03-17",
     image: "/Assets/Recents/IMG_0117.jpg",
