@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "la-quinta-resort-palm-springs",
+    date: "2026-05-10",
+    image: "/Assets/Recents/IMG_1143.jpg",
+    location: "La Quinta, California",
+    caption: "La Quinta Resort & Club, founded in 1926, viewed through the property's pergola. The Santa Rosa Mountains form the backdrop behind the resort's original Spanish Colonial casitas.",
+  },
+  {
     slug: "oak-park-hemingway-murals",
     date: "2026-04-23",
     image: "/Assets/Recents/IMG_0997.jpg",
