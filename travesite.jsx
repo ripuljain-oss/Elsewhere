@@ -15,6 +15,62 @@ const RECENTS = [...RECENTS_RAW]
 
 const RAW_TRIPS = [
   {
+    id: "Rocky Mountain National Park",
+    location: "Rocky Mountain National Park",
+    country: "United States",
+    year: "2026",
+    dates: "August 8 – 14, 2026",
+    heroDate: "August 2026",
+    coords: "N 40.3428°",
+    tagline: "Tundra, tarns, and the Continental Divide.",
+    intro: "A week on both sides of the Divide. Trail Ridge, the Bear Lake chain, Glacier Gorge — and elk in Moraine Park on the way out.",
+    coverImage: "/Assets/RMNP/DSC_3271.jpg",
+    featuredIndices: [9, 14],
+    color1: "#1F3A4A",
+    color2: "#5A6B52",
+    color3: "#8B9AA0",
+    accent: "#D4CDB8",
+    emoji: "🏔️",
+    images: [
+      "/Assets/RMNP/DSC_3152.jpg",
+      "/Assets/RMNP/DSC_3165.jpg",
+      "/Assets/RMNP/DSC_3166.jpg",
+      "/Assets/RMNP/DSC_3170.jpg",
+      "/Assets/RMNP/DSC_3172.jpg",
+      "/Assets/RMNP/DSC_3181.jpg",
+      "/Assets/RMNP/DSC_3192.jpg",
+      "/Assets/RMNP/DSC_3206.jpg",
+      "/Assets/RMNP/DSC_3215.jpg",
+      "/Assets/RMNP/DSC_3217.jpg",
+      "/Assets/RMNP/DSC_3227.jpg",
+      "/Assets/RMNP/DSC_3244.jpg",
+      "/Assets/RMNP/DSC_3251.jpg",
+      "/Assets/RMNP/DSC_3268.jpg",
+      "/Assets/RMNP/DSC_3271.jpg",
+      "/Assets/RMNP/DSC_3284.jpg",
+      "/Assets/RMNP/DSC_3371.jpg",
+    ],
+    imageCaptions: [
+      "Longs Peak from the edge of Estes Park. At 14,259 feet it is the park's highest summit and Colorado's northernmost 14,000-foot peak.",
+      "A cabin in Estes Park, the east gateway to Rocky Mountain National Park. The town sits at 7,522 feet along the Big Thompson River.",
+      "Trail Ridge Road above a glacially carved valley. It is the highest continuous paved highway in the United States, cresting at 12,183 feet.",
+      "Adams Falls, East Inlet. The cascade drops about 55 feet through a granite gorge; Grand Lake, Colorado's largest natural lake, lies just beyond.",
+      "Adams Falls from across the gorge. Named for Jay Adams, an early Grand Lake settler, it is the first landmark on the East Inlet Trail.",
+      "North Inlet Trail near Grand Lake. The post lists a west-to-east traverse to Bear Lake and marks a segment of the 3,100-mile Continental Divide Trail.",
+      "Trail Ridge Road from a rocky slope above the trees. Built 1929–1932, it connects Estes Park and Grand Lake across 48 miles of the park.",
+      "Nymph Lake. The boys walk a fallen log among yellow pond lilies, which cover the 9,700-foot lake each summer, a half-mile above Bear Lake.",
+      "A snowmelt stream between Nymph and Dream lakes. Pleistocene glaciers carved this valley, now a chain of subalpine lakes below Hallett Peak.",
+      "Dream Lake and Hallett Peak (12,713 ft). The lake sits at 9,905 feet, 1.1 miles from Bear Lake, at the foot of the Continental Divide.",
+      "Quaking aspens along a snowmelt creek. Aspens in the park spread by root clones — some groves have stood for thousands of years.",
+      "Alberta Falls on Glacier Creek. The 30-foot cascade, 0.8 miles from the Glacier Gorge trailhead, is named for settler Alberta Sprague.",
+      "Glacier Gorge Trail. Pleistocene glaciers carved this canyon; a chain of tarns now sits in the cirques below the Continental Divide.",
+      "The Loch, Glacier Gorge. The tarn sits at 10,190 feet below Taylor Peak, in a watershed scientists have monitored for more than forty years.",
+      "The Loch, Glacier Gorge, reflecting Taylor Peak. At 13,153 feet, Taylor Peak sits on the Continental Divide at the head of Loch Vale.",
+      "A forested valley from a Glacier Gorge overlook. Engelmann spruce and subalpine fir dominate the park between about 9,000 and 11,000 feet.",
+      "A cow elk in Moraine Park, Longs Peak beyond. At 14,259 feet, Longs is the only fourteener in Rocky Mountain National Park.",
+    ],
+  },
+  {
     id: "Guatemala",
     location: "Antigua",
     country: "Guatemala",
@@ -335,15 +391,47 @@ const RAW_TRIPS = [
   },
 ];
 
-const TRIPS = RAW_TRIPS.map((trip) => ({
-  ...trip,
-  coverImage: trip.coverImage ? asset(trip.coverImage) : trip.coverImage,
-  images: (trip.images || []).map(asset),
-}));
+const slugify = (id) => String(id).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex = 0, naturalDimensions = false, loading, src }) => {
-  const imageSrc = asset(src || (trip.images && trip.images[imageIndex]));
+const altFromCaption = (caption, fallback = "") => {
+  if (!caption) return fallback;
+  const match = caption.match(/^[^.!?]+[.!?]?/);
+  return (match ? match[0] : caption).trim();
+};
+
+const TRIPS = RAW_TRIPS
+  .map((trip) => ({
+    ...trip,
+    slug: slugify(trip.id),
+    coverImage: trip.coverImage ? asset(trip.coverImage) : trip.coverImage,
+    images: (trip.images || []).map(asset),
+  }))
+  .sort((a, b) => (parseInt(b.year, 10) || 0) - (parseInt(a.year, 10) || 0));
+
+const TRIPS_BY_YEAR = (() => {
+  const map = new Map();
+  TRIPS.forEach((trip) => {
+    const list = map.get(trip.year) || [];
+    list.push(trip);
+    map.set(trip.year, list);
+  });
+  return [...map.entries()].map(([year, trips]) => ({ year, trips }));
+})();
+
+const PhotoCutline = ({ index, caption }) => {
+  if (!caption) return null;
+  return (
+    <div className="cutline">
+      <span className="plate">{String(index + 1).padStart(2, "0")}</span>
+      <p className="photo-caption">{caption}</p>
+    </div>
+  );
+};
+
+const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex = 0, naturalDimensions = false, loading = "lazy", src, alt, fetchPriority }) => {
+  const imageSrc = src === null ? null : asset(src || (trip.images && trip.images[imageIndex]));
   const hasImage = Boolean(imageSrc);
+  const imageAlt = alt || altFromCaption(trip?.imageCaptions?.[imageIndex], trip?.location || "");
   const placeholderStyle = naturalDimensions && !hasImage ? { minHeight: 400 } : {};
   return (
     <div style={{
@@ -354,8 +442,9 @@ const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex
       {hasImage ? (
         <img
           src={imageSrc}
-          alt=""
+          alt={imageAlt}
           loading={loading}
+          fetchPriority={fetchPriority}
           style={naturalDimensions ? {
             width: "100%", height: "auto", display: "block", verticalAlign: "top",
           } : {
@@ -454,6 +543,9 @@ export default function Elsewhere() {
   const containerRef = useRef(null);
   const heroIntervalRef = useRef(null);
   const lightboxTouchStartRef = useRef({ x: 0 });
+  const lightboxRef = useRef(null);
+  const lightboxRestoreFocusRef = useRef(null);
+  const [heroReady, setHeroReady] = useState(() => new Set([0, 1]));
 
   useEffect(() => {
     if (!activeTrip?.images?.length) return;
@@ -495,19 +587,43 @@ export default function Elsewhere() {
   })();
 
   const currentTripIndex = activeTrip ? TRIPS.findIndex(t => t.id === activeTrip.id) : -1;
-  const prevTrip = currentTripIndex >= 0 ? TRIPS[(currentTripIndex - 1 + TRIPS.length) % TRIPS.length] : null;
-  const nextTrip = currentTripIndex >= 0 ? TRIPS[(currentTripIndex + 1) % TRIPS.length] : null;
+  const prevTrip = currentTripIndex > 0 ? TRIPS[currentTripIndex - 1] : null;
+  const nextTrip = currentTripIndex >= 0 && currentTripIndex < TRIPS.length - 1 ? TRIPS[currentTripIndex + 1] : null;
 
   useEffect(() => {
     if (!lightboxOpen) return;
+    lightboxRestoreFocusRef.current = document.activeElement;
+    const root = lightboxRef.current;
+    const getFocusable = () => root ? [...root.querySelectorAll("button")] : [];
+    getFocusable()[0]?.focus();
     const onKey = (e) => {
-      if (e.key === "Escape") setLightboxOpen(false);
+      if (e.key === "Escape") {
+        setLightboxOpen(false);
+        return;
+      }
+      if (e.key === "Tab") {
+        const list = getFocusable();
+        if (!list.length) return;
+        const first = list[0];
+        const last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
       if (!activeTrip?.images?.length) return;
       if (e.key === "ArrowLeft") setLightboxIndex(i => (i - 1 + activeTrip.images.length) % activeTrip.images.length);
       if (e.key === "ArrowRight") setLightboxIndex(i => (i + 1) % activeTrip.images.length);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      const restore = lightboxRestoreFocusRef.current;
+      if (restore && typeof restore.focus === "function") restore.focus();
+    };
   }, [lightboxOpen, activeTrip?.images?.length]);
 
   const startHeroInterval = useCallback(() => {
@@ -527,6 +643,15 @@ export default function Elsewhere() {
   }, [startHeroInterval]);
 
   useEffect(() => {
+    setHeroReady((prev) => {
+      const next = new Set(prev);
+      next.add(heroIdx);
+      next.add((heroIdx + 1) % TRIPS.length);
+      return next;
+    });
+  }, [heroIdx]);
+
+  useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const onScroll = () => setScrolled(el.scrollTop > 80);
@@ -534,63 +659,69 @@ export default function Elsewhere() {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navigateTo = (trip) => {
+  const fadeThen = (fn) => {
     setLightboxOpen(false);
     setPageVisible(false);
     setTimeout(() => {
+      fn();
+      if (containerRef.current) containerRef.current.scrollTop = 0;
+      requestAnimationFrame(() => setPageVisible(true));
+    }, 180);
+  };
+
+  const clearHash = () => {
+    const path = window.location.pathname + window.location.search;
+    if (window.location.hash) history.pushState(null, "", path);
+  };
+
+  const navigateTo = (trip) => {
+    fadeThen(() => {
       setActiveTrip(trip);
       setActiveRecent(null);
       setPage("trip");
-      if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
-      if (containerRef.current) containerRef.current.scrollTop = 0;
-      setTimeout(() => setPageVisible(true), 80);
-    }, 350);
+      window.location.hash = trip.slug;
+    });
   };
 
   const navigateHome = () => {
-    setLightboxOpen(false);
-    setPageVisible(false);
-    setTimeout(() => {
+    fadeThen(() => {
       setPage("home");
       setActiveRecent(null);
       setActiveTrip(null);
-      if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
-      if (containerRef.current) containerRef.current.scrollTop = 0;
-      setTimeout(() => setPageVisible(true), 80);
-    }, 350);
+      clearHash();
+    });
   };
 
   const navigateToRecents = () => {
-    setLightboxOpen(false);
-    setPageVisible(false);
-    setTimeout(() => {
+    fadeThen(() => {
       setPage("recents");
       setActiveRecent(null);
       setActiveTrip(null);
       window.location.hash = "recents";
-      if (containerRef.current) containerRef.current.scrollTop = 0;
-      setTimeout(() => setPageVisible(true), 80);
-    }, 350);
+    });
   };
 
   const navigateToRecent = (entry) => {
-    setLightboxOpen(false);
-    setPageVisible(false);
-    setTimeout(() => {
+    fadeThen(() => {
       setActiveRecent(entry);
       setActiveTrip(null);
       setPage("recent-detail");
       window.location.hash = `recents/${entry.slug}`;
-      if (containerRef.current) containerRef.current.scrollTop = 0;
-      setTimeout(() => setPageVisible(true), 80);
-    }, 350);
+    });
   };
 
   useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash.replace("#", "");
+    const applyRoute = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (!hash) {
+        setPage("home");
+        setActiveTrip(null);
+        setActiveRecent(null);
+        setLightboxOpen(false);
+        return;
+      }
       if (hash.startsWith("recents/")) {
-        const slug = hash.replace("recents/", "");
+        const slug = hash.slice("recents/".length);
         const entry = RECENTS.find(r => r.slug === slug);
         if (entry) {
           setActiveRecent(entry);
@@ -603,11 +734,26 @@ export default function Elsewhere() {
         setPage("recents");
         setActiveRecent(null);
         setActiveTrip(null);
+        return;
       }
+      const trip = TRIPS.find(t => t.slug === hash);
+      if (trip) {
+        setActiveTrip(trip);
+        setActiveRecent(null);
+        setPage("trip");
+        return;
+      }
+      setPage("home");
+      setActiveTrip(null);
+      setActiveRecent(null);
     };
-    handleHash();
-    window.addEventListener("hashchange", handleHash);
-    return () => window.removeEventListener("hashchange", handleHash);
+    applyRoute();
+    window.addEventListener("hashchange", applyRoute);
+    window.addEventListener("popstate", applyRoute);
+    return () => {
+      window.removeEventListener("hashchange", applyRoute);
+      window.removeEventListener("popstate", applyRoute);
+    };
   }, []);
 
   const changeHero = (i) => {
@@ -616,19 +762,56 @@ export default function Elsewhere() {
     startHeroInterval();
   };
 
-  const isTrip = page === "trip";
-  const headerTextColor = isTrip && !scrolled ? "rgba(255,255,255,0.9)" : "#1A1A18";
-  const headerNavColor = isTrip && !scrolled ? "rgba(255,255,255,0.5)" : "#8A8780";
+  const overPhotoHero = (page === "home" || page === "trip") && !scrolled;
+  const headerTextColor = overPhotoHero ? "rgba(255,255,255,0.92)" : "#1A1A18";
+  const headerNavColor = overPhotoHero ? "rgba(255,255,255,0.72)" : "#8A8780";
+
+  const renderArchiveCard = (trip) => {
+    const coverSrc = trip.coverImage || trip.images?.[0];
+    const coverIdx = trip.images?.indexOf(coverSrc) ?? 0;
+    return (
+    <div className="trip-card" style={{ height: "100%" }}
+      onClick={() => navigateTo(trip)}
+      onMouseEnter={() => setHoveredCard(trip.id)}
+      onMouseLeave={() => setHoveredCard(null)}
+    >
+      <div className="card-photo" style={{ position: "absolute", inset: 0 }}>
+        <PhotoPlaceholder
+          trip={trip}
+          src={coverSrc}
+          alt={altFromCaption(trip.imageCaptions?.[coverIdx >= 0 ? coverIdx : 0], trip.location)}
+          style={{ width: "100%", height: "100%" }}
+          loading="lazy"
+        />
+      </div>
+      <div className="card-overlay" />
+      <div className="card-label" style={{
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        padding: "22px 20px 18px",
+      }}>
+        <div style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: "16px",
+          color: "white", fontWeight: 500, letterSpacing: "0.3px", lineHeight: 1.3,
+        }}>{trip.location}</div>
+        <div style={{
+          color: "rgba(255,255,255,0.55)", fontSize: "10px",
+          letterSpacing: "2.5px", textTransform: "uppercase",
+          marginTop: "5px", fontFamily: "'DM Sans', sans-serif",
+        }}>{trip.country} · {trip.year}</div>
+        {trip.tagline && <div className="card-tagline">{trip.tagline}</div>}
+      </div>
+    </div>
+    );
+  };
 
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#F7F4EF", height: "100vh", overflow: "hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
-
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 2px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(200,169,110,0.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: rgba(26,26,24,0.18); border-radius: 2px; }
 
         .trip-card {
           cursor: pointer;
@@ -643,12 +826,44 @@ export default function Elsewhere() {
         .trip-card:hover .card-photo { transform: scale(1.05); }
         .trip-card .card-overlay {
           position: absolute; inset: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
+          background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.22) 52%, transparent 100%);
           transition: background 0.5s ease;
         }
         .trip-card:hover .card-overlay {
-          background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.15) 60%, transparent 100%);
+          background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.28) 58%, transparent 100%);
         }
+        .card-tagline {
+          color: rgba(255,255,255,0.72);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 400;
+          letter-spacing: 0.1px;
+          line-height: 1.4;
+          margin-top: 8px;
+        }
+        .year-block {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 32px 40px;
+          padding: 52px 0;
+          border-top: 1px solid rgba(26,26,24,0.08);
+        }
+        .year-ledger {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 42px;
+          font-weight: 300;
+          color: #1A1A18;
+          line-height: 1;
+          letter-spacing: -0.5px;
+          padding-top: 4px;
+        }
+        .year-grid-featured .trip-card { aspect-ratio: 16 / 7; }
+        .year-grid-3 {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+        }
+        .year-grid-3 .trip-card { aspect-ratio: 4 / 5; }
         .trip-card .card-label {
           transition: transform 0.5s cubic-bezier(0.22,1,0.36,1);
         }
@@ -698,15 +913,15 @@ export default function Elsewhere() {
           background: rgba(255,255,255,0.35);
         }
         .hero-dot.active { background: #C8A96E; }
-        .hero-dot:hover { background: rgba(255,255,255,0.7); }
+        .lb-text-nav:hover { color: rgba(255,255,255,0.88) !important; }
 
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(28px); }
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes heroReveal {
-          from { opacity: 0; transform: translateY(40px) skewY(0.5deg); }
-          to { opacity: 1; transform: translateY(0) skewY(0); }
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes lineGrow {
           from { transform: scaleX(0); }
@@ -723,15 +938,30 @@ export default function Elsewhere() {
           animation: lineGrow 1.2s cubic-bezier(0.22,1,0.36,1) 0.8s both;
         }
 
+        .cutline {
+          display: grid;
+          grid-template-columns: 2.4em 1fr;
+          column-gap: 12px;
+          align-items: start;
+          padding: 16px 0 0;
+        }
+        .plate {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 10px;
+          letter-spacing: 1.5px;
+          color: #8A8780;
+          padding-top: 6px;
+        }
         .photo-caption {
           font-family: 'Cormorant Garamond', serif;
-          font-style: italic;
-          color: #8A8780;
-          font-size: 15px;
-          letter-spacing: 0.3px;
-          line-height: 1.7;
-          padding: 14px 0 0;
-          margin-left: 0;
+          font-style: normal;
+          font-weight: 400;
+          color: #1A1A18;
+          font-size: 19px;
+          letter-spacing: 0;
+          line-height: 1.5;
+          padding: 0;
+          margin: 0;
         }
 
         .photo-journal { padding: 80px 0 40px; }
@@ -750,10 +980,10 @@ export default function Elsewhere() {
           display: block;
           cursor: pointer;
         }
-        .block-feature .photo-caption {
+        .block-feature .cutline {
           max-width: 1140px;
-          margin: 14px auto 0;
-          padding: 14px 48px 0;
+          margin: 0 auto;
+          padding: 16px 48px 0;
         }
         .pair-grid {
           display: grid;
@@ -802,22 +1032,22 @@ export default function Elsewhere() {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          color: rgba(255,255,255,0.85);
+          color: rgba(255,255,255,0.88);
           font-family: 'DM Sans', sans-serif;
           font-size: 11px;
           letter-spacing: 3px;
           text-transform: uppercase;
           padding: 12px 22px;
-          border: 1px solid rgba(200,169,110,0.55);
-          background: rgba(0,0,0,0.18);
+          border: 1px solid rgba(255,255,255,0.35);
+          background: rgba(0,0,0,0.22);
           backdrop-filter: blur(6px);
           cursor: pointer;
           transition: all 0.4s cubic-bezier(0.22,1,0.36,1);
           animation: fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.7s both;
         }
         .hero-cta:hover {
-          background: rgba(200,169,110,0.18);
-          border-color: rgba(200,169,110,0.85);
+          background: rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.7);
           letter-spacing: 4px;
         }
         .hero-cta .arrow { transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
@@ -864,7 +1094,7 @@ export default function Elsewhere() {
           position: relative;
         }
         .recent-card .recent-image {
-          aspect-ratio: 4 / 3;
+          aspect-ratio: 3 / 2;
           overflow: hidden;
           background: #E8E3DA;
         }
@@ -908,24 +1138,24 @@ export default function Elsewhere() {
           margin-top: 10px;
           padding-left: 0;
           font-family: 'Cormorant Garamond', serif;
-          font-style: italic;
-          color: #8A8780;
-          font-size: 15px;
-          line-height: 1.7;
+          font-style: normal;
+          color: #1A1A18;
+          font-size: 19px;
+          line-height: 1.5;
         }
 
         @media (max-width: 700px) {
-          .masonry-grid { grid-template-columns: 1fr !important; grid-auto-rows: 240px !important; }
-          .masonry-grid > div { grid-column: 1 !important; grid-row: span 1 !important; }
           .split-row { grid-template-columns: 1fr !important; }
           .split-row > * { height: 260px !important; }
+          .hero-coords { display: none; }
           .hero-title { font-size: 3rem !important; }
+          .hero-meta { letter-spacing: 2px !important; line-height: 1.7 !important; max-width: 100%; white-space: normal; }
           .section-pad { padding: 0 20px 60px !important; }
           .journal-pad { padding: 60px 20px !important; }
           .photo-journal { padding: 40px 0 20px; }
           .block-contained { padding: 0 20px; margin-bottom: 36px; }
           .block-feature { margin: 40px 0; }
-          .block-feature .photo-caption { padding: 14px 20px 0; }
+          .block-feature .cutline { padding: 16px 20px 0; }
           .pair-grid { grid-template-columns: 1fr; gap: 36px; }
           .intro-block { padding: 60px 20px 20px; }
           .trip-nav { grid-template-columns: 1fr; padding: 0 20px; gap: 16px; }
@@ -940,6 +1170,10 @@ export default function Elsewhere() {
           .recents-grid { grid-template-columns: 1fr; gap: 28px; }
           .recents-feed { padding: 40px 20px 60px; }
           .recents-feed-entry { margin-bottom: 60px; }
+          .year-block { grid-template-columns: 1fr; gap: 12px; padding: 36px 0; }
+          .year-ledger { font-size: 28px; }
+          .year-grid-3 { grid-template-columns: 1fr; }
+          .year-grid-featured .trip-card { aspect-ratio: 4 / 5; }
         }
       `}</style>
 
@@ -957,7 +1191,7 @@ export default function Elsewhere() {
           cursor: "pointer",
           display: "flex", alignItems: "baseline", gap: "14px",
           transition: "color 0.5s ease",
-          userSelect: "none",
+          textShadow: overPhotoHero ? "0 1px 16px rgba(0,0,0,0.45)" : "none",
         }}>
           <span style={{
             fontFamily: "'Cormorant Garamond', serif",
@@ -966,10 +1200,10 @@ export default function Elsewhere() {
           }}>
             Elsewhere
           </span>
-          <span className="header-dash" style={{ color: headerNavColor, opacity: 0.4 }}>—</span>
+          <span className="header-dash" style={{ color: headerNavColor, opacity: overPhotoHero ? 0.7 : 0.4 }}>—</span>
           <span className="header-author" style={{
             fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-            fontSize: "13px", color: headerNavColor, opacity: 0.55,
+            fontSize: "13px", color: headerNavColor, opacity: overPhotoHero ? 0.95 : 0.55,
           }}>
             by Ripul Jain
           </span>
@@ -980,6 +1214,7 @@ export default function Elsewhere() {
           fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
           color: headerNavColor, fontWeight: 400,
           transition: "color 0.5s ease",
+          textShadow: overPhotoHero ? "0 1px 16px rgba(0,0,0,0.45)" : "none",
         }}>
           <span className="nav-item" onClick={navigateToRecents} style={{ cursor: "pointer" }}>
             Recents
@@ -991,7 +1226,7 @@ export default function Elsewhere() {
       <div ref={containerRef} style={{
         height: "100vh", overflowY: "auto", overflowX: "hidden",
         opacity: pageVisible ? 1 : 0,
-        transition: "opacity 0.35s ease",
+        transition: "opacity 0.18s ease",
       }}>
 
         {/* ══════════════════════════════ HOME PAGE ══════════════════════════════ */}
@@ -999,31 +1234,43 @@ export default function Elsewhere() {
           <div>
 
             {/* Hero */}
-            <div style={{ height: "100vh", position: "relative", overflow: "hidden" }}>
+            <div
+              style={{ height: "100vh", position: "relative", overflow: "hidden" }}
+              onMouseEnter={() => clearInterval(heroIntervalRef.current)}
+              onMouseLeave={() => startHeroInterval()}
+            >
 
-              {/* Background photos crossfade */}
-              {TRIPS.map((trip, i) => (
-                <div key={trip.id} style={{
-                  position: "absolute", inset: 0,
-                  opacity: heroIdx === i ? (heroFading ? 0 : 1) : 0,
-                  transition: "opacity 1.4s cubic-bezier(0.4,0,0.2,1)",
-                }}>
-                  <PhotoPlaceholder
-                    trip={trip}
-                    src={trip.coverImage || trip.images?.[0]}
-                    style={{ width: "100%", height: "100%" }}
-                  />
-                </div>
-              ))}
+              {/* Background photos crossfade — load active + next only */}
+              {TRIPS.map((trip, i) => {
+                const coverSrc = trip.coverImage || trip.images?.[0];
+                const coverIdx = trip.images?.indexOf(coverSrc) ?? 0;
+                const shouldLoad = heroReady.has(i) || i === heroIdx || i === (heroIdx + 1) % TRIPS.length;
+                return (
+                  <div key={trip.id} style={{
+                    position: "absolute", inset: 0,
+                    opacity: heroIdx === i ? (heroFading ? 0 : 1) : 0,
+                    transition: "opacity 1.4s cubic-bezier(0.4,0,0.2,1)",
+                  }}>
+                    <PhotoPlaceholder
+                      trip={trip}
+                      src={shouldLoad ? coverSrc : null}
+                      alt={altFromCaption(trip.imageCaptions?.[coverIdx >= 0 ? coverIdx : 0], trip.location)}
+                      fetchPriority={i === 0 ? "high" : undefined}
+                      loading={i === 0 ? "eager" : "lazy"}
+                      style={{ width: "100%", height: "100%" }}
+                    />
+                  </div>
+                );
+              })}
 
-              {/* Gradient overlays */}
+              {/* Gradient overlays — top wash for header, deep floor for type */}
               <div style={{
                 position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.35) 55%, rgba(26,26,24,0.78) 100%)",
+                background: "linear-gradient(to bottom, rgba(26,26,24,0.62) 0%, rgba(26,26,24,0.22) 14%, transparent 30%, rgba(26,26,24,0.5) 58%, rgba(26,26,24,0.9) 80%, rgba(26,26,24,0.96) 100%)",
               }} />
               <div style={{
                 position: "absolute", inset: 0,
-                background: "linear-gradient(to right, rgba(0,0,0,0.15) 0%, transparent 60%)",
+                background: "linear-gradient(to right, rgba(0,0,0,0.12) 0%, transparent 55%)",
               }} />
 
               {/* Hero text */}
@@ -1031,16 +1278,16 @@ export default function Elsewhere() {
                 position: "absolute", bottom: "44px", left: "48px", right: "48px",
                 maxWidth: "820px",
               }}>
-                <div style={{
+                <div className="hero-meta" style={{
                   fontSize: "10px", letterSpacing: "3px",
                   textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
                   fontWeight: 400,
-                  color: "rgba(255,255,255,0.65)",
+                  color: "rgba(255,255,255,0.7)",
                   marginBottom: "20px",
                   animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.2s both",
                 }}>
-                  <span style={{ color: "#D4B77A" }}>{TRIPS[heroIdx].coords}</span>
-                  {" · "}{TRIPS[heroIdx].location}
+                  <span className="hero-coords">{TRIPS[heroIdx].coords}{" · "}</span>
+                  {TRIPS[heroIdx].location}
                   {" · "}{TRIPS[heroIdx].country}
                   {" · "}{TRIPS[heroIdx].heroDate || TRIPS[heroIdx].year}
                 </div>
@@ -1050,6 +1297,7 @@ export default function Elsewhere() {
                   fontWeight: 300, color: "white", lineHeight: 0.9,
                   letterSpacing: "-2.5px",
                   margin: 0,
+                  textShadow: "0 2px 28px rgba(0,0,0,0.35)",
                   animation: "heroReveal 1.3s cubic-bezier(0.22,1,0.36,1) 0.1s both",
                 }}>
                   {TRIPS[heroIdx].location}.
@@ -1057,7 +1305,7 @@ export default function Elsewhere() {
                 <p className="hero-tagline" style={{
                   marginTop: "24px",
                   maxWidth: "540px",
-                  color: "rgba(255,255,255,0.85)",
+                  color: "rgba(255,255,255,0.88)",
                   fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
                   fontSize: "22px", lineHeight: 1.35,
                   animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.4s both",
@@ -1089,128 +1337,99 @@ export default function Elsewhere() {
               </div>
             </div>
 
-            {/* Recents section */}
-            {RECENTS.length > 0 && (
-              <>
-                <div className="section-pad" style={{ padding: "88px 48px 36px", maxWidth: "1280px", margin: "0 auto" }}>
-                  <RevealBlock>
-                    <div style={{
-                      display: "flex", alignItems: "baseline", justifyContent: "space-between",
-                      paddingBottom: "22px", borderBottom: "1px solid rgba(26,26,24,0.07)",
-                      gap: "24px",
-                    }}>
-                      <div>
-                        <h2 style={{
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: "15px", fontWeight: 500,
-                          color: "#1A1A18", letterSpacing: "0.2px",
-                        }}>Recent Photos</h2>
-                        <div style={{
-                          marginTop: "6px",
-                          color: "#8A8780", fontSize: "11px", letterSpacing: "2.5px",
-                          textTransform: "uppercase", fontWeight: 400,
-                        }}>Mostly shot on mobile</div>
-                      </div>
-                      <span onClick={navigateToRecents} className="nav-item" style={{
-                        cursor: "pointer", whiteSpace: "nowrap",
-                        color: "#8A8780", fontSize: "11px", letterSpacing: "2.5px",
-                        textTransform: "uppercase", fontWeight: 400,
-                      }}>See all →</span>
-                    </div>
-                  </RevealBlock>
-                </div>
-                <div className="section-pad" style={{ padding: "0 48px 80px", maxWidth: "1280px", margin: "0 auto" }}>
-                  <div className="recents-grid">
-                    {RECENTS.slice(0, 3).map((entry, i) => (
-                      <RevealBlock key={entry.slug} delay={i * 0.08}>
-                        <div className="recent-card" onClick={() => navigateToRecent(entry)}>
-                          <div className="recent-image">
-                            <img src={entry.image} alt="" loading="lazy" />
-                          </div>
-                          <div className="recent-meta">
-                            {formatRecentDate(entry.date)} · {entry.location}
-                          </div>
-                        </div>
-                      </RevealBlock>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Section header */}
-            <div className="section-pad" style={{ padding: "40px 48px 44px", maxWidth: "1280px", margin: "0 auto" }}>
+            {/* Year archive */}
+            <div className="section-pad" style={{ padding: "56px 48px 24px", maxWidth: "1280px", margin: "0 auto" }}>
               <RevealBlock>
                 <div style={{
                   display: "flex", alignItems: "baseline", justifyContent: "space-between",
-                  paddingBottom: "22px", borderBottom: "1px solid rgba(26,26,24,0.07)",
+                  paddingBottom: "8px",
                 }}>
                   <h2 style={{
                     fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "15px", fontWeight: 500,
-                    color: "#1A1A18", letterSpacing: "0.2px",
-                  }}>All destinations</h2>
+                    fontSize: "10px", fontWeight: 400,
+                    color: "#8A8780", letterSpacing: "2.5px", textTransform: "uppercase",
+                  }}>Destinations</h2>
                   <span style={{
-                    color: "#8A8780", fontSize: "11px", letterSpacing: "2.5px",
+                    color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px",
                     textTransform: "uppercase", fontWeight: 400,
                   }}>{TRIPS.length} journeys</span>
                 </div>
               </RevealBlock>
+
+              {TRIPS_BY_YEAR.map((group, gi) => {
+                const isNewest = gi === 0;
+                const featuredTrip = isNewest ? group.trips[0] : null;
+                const rest = isNewest ? group.trips.slice(1) : group.trips;
+                return (
+                  <div key={group.year} className="year-block">
+                    <div className="year-ledger">{group.year}</div>
+                    <div>
+                      {featuredTrip && (
+                        <RevealBlock>
+                          <div className="year-grid-featured">
+                            {renderArchiveCard(featuredTrip)}
+                          </div>
+                        </RevealBlock>
+                      )}
+                      {rest.length > 0 && (
+                        <div className="year-grid-3" style={{ marginTop: featuredTrip ? 16 : 0 }}>
+                          {rest.map((trip, i) => (
+                            <RevealBlock key={trip.id} delay={i * 0.06}>
+                              {renderArchiveCard(trip)}
+                            </RevealBlock>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Masonry grid */}
-            <div className="section-pad" style={{ padding: "0 48px 100px", maxWidth: "1280px", margin: "0 auto" }}>
-              <div className="masonry-grid" style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(12, 1fr)",
-                gridAutoRows: "72px",
-                gap: "14px",
-              }}>
-                {TRIPS.map((trip, i) => {
-                  const layouts = [
-                    { col: "1 / 7", row: "span 6" },
-                    { col: "7 / 13", row: "span 8" },
-                    { col: "1 / 5", row: "span 7" },
-                    { col: "5 / 13", row: "span 5" },
-                    { col: "1 / 8", row: "span 6" },
-                    { col: "8 / 13", row: "span 7" },
-                    { col: "1 / 13", row: "span 5" },
-                  ];
-                  const layout = layouts[i] || layouts[0];
-                  return (
-                    <RevealBlock key={trip.id} delay={i * 0.08} style={{
-                      gridColumn: layout.col, gridRow: layout.row,
-                    }}>
-                      <div className="trip-card" style={{ height: "100%" }}
-                        onClick={() => navigateTo(trip)}
-                        onMouseEnter={() => setHoveredCard(trip.id)}
-                        onMouseLeave={() => setHoveredCard(null)}
-                      >
-                        <div className="card-photo" style={{ position: "absolute", inset: 0 }}>
-                          <PhotoPlaceholder trip={trip} style={{ width: "100%", height: "100%" }} loading="lazy" />
+            {/* Notebook — recents, demoted */}
+            {RECENTS.length > 0 && (
+              <div className="section-pad" style={{ padding: "28px 48px 64px", maxWidth: "1280px", margin: "0 auto" }}>
+                <RevealBlock>
+                  <div style={{
+                    display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                    paddingBottom: "16px", borderBottom: "1px solid rgba(26,26,24,0.07)",
+                    gap: "24px",
+                  }}>
+                    <div>
+                      <h2 style={{
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: "10px", fontWeight: 400,
+                        color: "#8A8780", letterSpacing: "2.5px", textTransform: "uppercase",
+                      }}>Notebook</h2>
+                      <div style={{
+                        marginTop: "6px",
+                        color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px",
+                        textTransform: "uppercase", fontWeight: 400,
+                      }}>Mostly shot on mobile</div>
+                    </div>
+                    <span onClick={navigateToRecents} className="nav-item" style={{
+                      cursor: "pointer", whiteSpace: "nowrap",
+                      color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px",
+                      textTransform: "uppercase", fontWeight: 400,
+                    }}>See all →</span>
+                  </div>
+                </RevealBlock>
+                <div className="recents-grid" style={{ marginTop: "20px" }}>
+                  {RECENTS.slice(0, 3).map((entry, i) => (
+                    <RevealBlock key={entry.slug} delay={i * 0.06}>
+                      <div className="recent-card" onClick={() => navigateToRecent(entry)}>
+                        <div className="recent-image">
+                          <img src={entry.image} alt={altFromCaption(entry.caption, entry.location)} loading="lazy" />
                         </div>
-                        <div className="card-overlay" />
-                        <div className="card-label" style={{
-                          position: "absolute", bottom: 0, left: 0, right: 0,
-                          padding: "22px 20px 18px",
-                        }}>
-                          <div style={{
-                            fontFamily: "'DM Sans', sans-serif",
-                            fontSize: "16px",
-                            color: "white", fontWeight: 500, letterSpacing: "0.3px", lineHeight: 1.3,
-                          }}>{trip.location}</div>
-                          <div style={{
-                            color: "rgba(255,255,255,0.55)", fontSize: "10px",
-                            letterSpacing: "2.5px", textTransform: "uppercase",
-                            marginTop: "5px", fontFamily: "'DM Sans', sans-serif",
-                          }}>{trip.country} · {trip.year}</div>
+                        <div className="recent-meta">
+                          {formatRecentDate(entry.date)} · {entry.location}
                         </div>
                       </div>
                     </RevealBlock>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Footer */}
             <footer style={{
@@ -1238,11 +1457,17 @@ export default function Elsewhere() {
               <PhotoPlaceholder
                 trip={activeTrip}
                 src={activeTrip.coverImage || activeTrip.images?.[0]}
+                alt={altFromCaption(
+                  activeTrip.imageCaptions?.[Math.max(0, activeTrip.images.indexOf(activeTrip.coverImage || activeTrip.images?.[0]))],
+                  activeTrip.location
+                )}
+                loading="eager"
+                fetchPriority="high"
                 style={{ width: "100%", height: "100%" }}
               />
               <div style={{
                 position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.22) 40%, rgba(0,0,0,0.75) 100%)",
+                background: "linear-gradient(to bottom, rgba(26,26,24,0.58) 0%, rgba(26,26,24,0.18) 20%, rgba(26,26,24,0.28) 50%, rgba(26,26,24,0.78) 78%, rgba(26,26,24,0.88) 100%)",
               }} />
               <div style={{
                 position: "absolute", inset: 0,
@@ -1250,7 +1475,7 @@ export default function Elsewhere() {
                 textAlign: "center", padding: "0 48px",
               }}>
                 <p style={{
-                  color: "rgba(200,169,110,0.8)", fontSize: "10px", letterSpacing: "5px",
+                  color: "rgba(255,255,255,0.62)", fontSize: "10px", letterSpacing: "5px",
                   textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
                   marginBottom: "22px",
                   animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.1s both",
@@ -1274,8 +1499,14 @@ export default function Elsewhere() {
                   transformOrigin: "left",
                 }} />
                 <p style={{
-                  color: "rgba(255,255,255,0.4)", fontSize: "12px", letterSpacing: "2.5px",
-                  textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
+                  color: "rgba(255,255,255,0.85)",
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontStyle: "italic",
+                  fontSize: "22px",
+                  lineHeight: 1.35,
+                  letterSpacing: 0,
+                  textTransform: "none",
+                  maxWidth: "540px",
                   marginTop: "22px",
                   animation: "fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.9s both",
                 }}>
@@ -1308,13 +1539,11 @@ export default function Elsewhere() {
                         <div className="block-feature">
                           <img
                             src={activeTrip.images[idx]}
-                            alt=""
+                            alt={altFromCaption(activeTrip.imageCaptions?.[idx], activeTrip.location)}
                             loading="lazy"
                             onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                           />
-                          {activeTrip.imageCaptions?.[idx] && (
-                            <p className="photo-caption">{activeTrip.imageCaptions[idx]}</p>
-                          )}
+                          <PhotoCutline index={idx} caption={activeTrip.imageCaptions?.[idx]} />
                         </div>
                       </RevealBlock>
                     );
@@ -1328,13 +1557,11 @@ export default function Elsewhere() {
                               <div key={idx}>
                                 <img
                                   src={activeTrip.images[idx]}
-                                  alt=""
+                                  alt={altFromCaption(activeTrip.imageCaptions?.[idx], activeTrip.location)}
                                   loading="lazy"
                                   onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                                 />
-                                {activeTrip.imageCaptions?.[idx] && (
-                                  <p className="photo-caption">{activeTrip.imageCaptions[idx]}</p>
-                                )}
+                                <PhotoCutline index={idx} caption={activeTrip.imageCaptions?.[idx]} />
                               </div>
                             ))}
                           </div>
@@ -1349,13 +1576,11 @@ export default function Elsewhere() {
                         <img
                           className="single-image"
                           src={activeTrip.images[idx]}
-                          alt=""
+                          alt={altFromCaption(activeTrip.imageCaptions?.[idx], activeTrip.location)}
                           loading="lazy"
                           onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                         />
-                        {activeTrip.imageCaptions?.[idx] && (
-                          <p className="photo-caption">{activeTrip.imageCaptions[idx]}</p>
-                        )}
+                        <PhotoCutline index={idx} caption={activeTrip.imageCaptions?.[idx]} />
                       </div>
                     </RevealBlock>
                   );
@@ -1386,6 +1611,7 @@ export default function Elsewhere() {
             </div>
             <RevealBlock>
               <div className="trip-nav">
+                {!prevTrip && nextTrip && <div />}
                 {prevTrip && (
                   <div className="trip-nav-card" onClick={() => navigateTo(prevTrip)}>
                     <div className="nav-photo">
@@ -1399,7 +1625,7 @@ export default function Elsewhere() {
                     <div className="nav-overlay" />
                     <div className="nav-label">
                       <div style={{
-                        color: "rgba(200,169,110,0.85)", fontSize: "10px",
+                        color: "rgba(255,255,255,0.55)", fontSize: "10px",
                         letterSpacing: "3px", textTransform: "uppercase",
                         marginBottom: "6px", fontFamily: "'DM Sans', sans-serif",
                       }}>
@@ -1435,7 +1661,7 @@ export default function Elsewhere() {
                     <div className="nav-overlay" />
                     <div className="nav-label" style={{ textAlign: "right" }}>
                       <div style={{
-                        color: "rgba(200,169,110,0.85)", fontSize: "10px",
+                        color: "rgba(255,255,255,0.55)", fontSize: "10px",
                         letterSpacing: "3px", textTransform: "uppercase",
                         marginBottom: "6px", fontFamily: "'DM Sans', sans-serif",
                       }}>
@@ -1516,7 +1742,7 @@ export default function Elsewhere() {
                   <div className="recents-feed-entry">
                     <img
                       src={entry.image}
-                      alt=""
+                      alt={altFromCaption(entry.caption, entry.location)}
                       loading="lazy"
                       onClick={() => navigateToRecent(entry)}
                     />
@@ -1573,7 +1799,9 @@ export default function Elsewhere() {
               <RevealBlock>
                 <img
                   src={activeRecent.image}
-                  alt=""
+                  alt={altFromCaption(activeRecent.caption, activeRecent.location)}
+                  loading="eager"
+                  fetchPriority="high"
                   style={{ width: "100%", display: "block", cursor: "pointer" }}
                 />
               </RevealBlock>
@@ -1591,8 +1819,8 @@ export default function Elsewhere() {
                 </div>
                 <p style={{
                   marginTop: "10px",
-                  fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic",
-                  color: "#8A8780", fontSize: "17px", lineHeight: 1.7, maxWidth: "680px",
+                  fontFamily: "'Cormorant Garamond', serif", fontStyle: "normal",
+                  color: "#1A1A18", fontSize: "19px", lineHeight: 1.5, maxWidth: "680px",
                 }}>
                   {activeRecent.caption}
                 </p>
@@ -1614,12 +1842,13 @@ export default function Elsewhere() {
       {/* Lightbox */}
       {lightboxOpen && page === "trip" && activeTrip?.images?.length > 0 && (
         <div
+          ref={lightboxRef}
           role="dialog"
           aria-modal="true"
           aria-label="Photo lightbox"
           style={{
             position: "fixed", inset: 0, zIndex: 9999,
-            background: "rgba(0,0,0,0.92)",
+            background: "#1A1A18",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
             padding: "48px",
           }}
@@ -1642,7 +1871,7 @@ export default function Elsewhere() {
         >
           <div style={{
             position: "absolute", top: "28px", left: "32px",
-            color: "rgba(255,255,255,0.6)", fontSize: "11px", letterSpacing: "3px",
+            color: "rgba(255,255,255,0.55)", fontSize: "11px", letterSpacing: "3px",
             textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
           }}>
             {String(lightboxIndex + 1).padStart(2, "0")} / {String(activeTrip.images.length).padStart(2, "0")}
@@ -1653,7 +1882,7 @@ export default function Elsewhere() {
             onClick={() => setLightboxOpen(false)}
             style={{
               position: "absolute", top: "20px", right: "24px",
-              background: "none", border: "none", color: "rgba(255,255,255,0.8)",
+              background: "none", border: "none", color: "rgba(255,255,255,0.75)",
               fontSize: "28px", cursor: "pointer", padding: "8px", lineHeight: 1,
             }}
           >
@@ -1663,44 +1892,63 @@ export default function Elsewhere() {
             <>
               <button
                 type="button"
-                aria-label="Previous"
+                aria-label="Previous photo"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i - 1 + activeTrip.images.length) % activeTrip.images.length); }}
                 style={{
-                  position: "absolute", left: "24px", top: "50%", transform: "translateY(-50%)",
-                  background: "rgba(255,255,255,0.1)", border: "none", color: "white",
-                  width: "48px", height: "48px", borderRadius: "50%", fontSize: "24px", cursor: "pointer",
+                  position: "absolute", left: "28px", top: "50%", transform: "translateY(-50%)",
+                  background: "none", border: "none",
+                  color: "rgba(255,255,255,0.5)",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase",
+                  cursor: "pointer", padding: "12px 8px",
                 }}
+                className="lb-text-nav"
               >
-                ‹
+                ← Prev
               </button>
               <button
                 type="button"
-                aria-label="Next"
+                aria-label="Next photo"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i + 1) % activeTrip.images.length); }}
                 style={{
-                  position: "absolute", right: "24px", top: "50%", transform: "translateY(-50%)",
-                  background: "rgba(255,255,255,0.1)", border: "none", color: "white",
-                  width: "48px", height: "48px", borderRadius: "50%", fontSize: "24px", cursor: "pointer",
+                  position: "absolute", right: "28px", top: "50%", transform: "translateY(-50%)",
+                  background: "none", border: "none",
+                  color: "rgba(255,255,255,0.5)",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase",
+                  cursor: "pointer", padding: "12px 8px",
                 }}
+                className="lb-text-nav"
               >
-                ›
+                Next →
               </button>
             </>
           )}
-          <img
-            src={activeTrip.images[lightboxIndex]}
-            alt=""
-            style={{ maxWidth: "100%", maxHeight: "calc(100vh - 120px)", objectFit: "contain" }}
+          <div
+            style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", maxWidth: "min(1100px, 100%)" }}
             onClick={(e) => e.stopPropagation()}
-          />
-          {activeTrip.imageCaptions?.[lightboxIndex] && (
-            <p style={{
-              marginTop: "20px", color: "rgba(255,255,255,0.85)", fontFamily: "'Cormorant Garamond', serif",
-              fontStyle: "italic", fontSize: "18px", textAlign: "center", maxWidth: "600px",
-            }}>
-              {activeTrip.imageCaptions[lightboxIndex]}
-            </p>
-          )}
+          >
+            <img
+              src={activeTrip.images[lightboxIndex]}
+              alt={altFromCaption(activeTrip.imageCaptions?.[lightboxIndex], activeTrip.location)}
+              loading="lazy"
+              style={{ maxWidth: "100%", maxHeight: "calc(100vh - 160px)", objectFit: "contain" }}
+            />
+            {activeTrip.imageCaptions?.[lightboxIndex] && (
+              <p style={{
+                marginTop: "20px",
+                color: "rgba(255,255,255,0.88)",
+                fontFamily: "'Cormorant Garamond', serif",
+                fontStyle: "normal",
+                fontSize: "19px",
+                lineHeight: 1.5,
+                textAlign: "left",
+                maxWidth: "720px",
+              }}>
+                {activeTrip.imageCaptions[lightboxIndex]}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>
