@@ -6,6 +6,26 @@
   NODE_VERSION = "20"
 
 [[headers]]
+  for = "/travel/Assets/*"
+    [headers.values]
+      Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
   for = "/Assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    [headers.values]
+      Cache-Control = "public, max-age=31536000, immutable"
+
+[[redirects]]
+  from = "/"
+  to = "/travel/"
+  status = 302
+
+[[redirects]]
+  from = "/travel"
+  to = "/travel/"
+  status = 301
+
+[[redirects]]
+  from = "/travel/*"
+  to = "/:splat"
+  status = 200

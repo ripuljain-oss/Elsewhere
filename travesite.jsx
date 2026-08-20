@@ -1,9 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { RECENTS as RECENTS_RAW } from "./recents";
 
-const RECENTS = [...RECENTS_RAW].sort((a, b) => b.date.localeCompare(a.date));
+const BASE = import.meta.env.BASE_URL || "/";
+const asset = (path) => {
+  if (!path) return path;
+  if (/^(https?:|data:|blob:)/i.test(path)) return path;
+  if (path.startsWith(BASE)) return path;
+  return `${BASE}${String(path).replace(/^\//, "")}`;
+};
 
-const TRIPS = [
+const RECENTS = [...RECENTS_RAW]
+  .map((entry) => ({ ...entry, image: asset(entry.image) }))
+  .sort((a, b) => b.date.localeCompare(a.date));
+
+const RAW_TRIPS = [
   {
     id: "Guatemala",
     location: "Antigua",
@@ -325,8 +335,14 @@ const TRIPS = [
   },
 ];
 
+const TRIPS = RAW_TRIPS.map((trip) => ({
+  ...trip,
+  coverImage: trip.coverImage ? asset(trip.coverImage) : trip.coverImage,
+  images: (trip.images || []).map(asset),
+}));
+
 const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex = 0, naturalDimensions = false, loading, src }) => {
-  const imageSrc = src || (trip.images && trip.images[imageIndex]);
+  const imageSrc = asset(src || (trip.images && trip.images[imageIndex]));
   const hasImage = Boolean(imageSrc);
   const placeholderStyle = naturalDimensions && !hasImage ? { minHeight: 400 } : {};
   return (

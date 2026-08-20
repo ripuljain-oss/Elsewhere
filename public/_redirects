@@ -1,0 +1,4 @@
+/              /travel/    302
+/travel        /index.html 200
+/travel/       /index.html 200
+/travel/*      /:splat     200

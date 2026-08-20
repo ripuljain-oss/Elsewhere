@@ -1,0 +1,23 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/travel/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/travel",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/travel/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/travel/:path*",
+      "destination": "/:path*"
+    }
+  ]
+}

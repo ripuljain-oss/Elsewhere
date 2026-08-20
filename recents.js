@@ -8,7 +8,7 @@
 //      (slug must be unique — used in the permalink URL)
 //   4. Commit + push → Vercel auto-deploys
 //   5. For Instagram: post same image + caption, set bio link to
-//      https://el5ewhere.net/#recents/{slug}
+//      https://jainfam.net/travel/#recents/{slug}
 //
 // Caption voice: informational, one verified fact, ~20-25 words.
 // No feelings, no brochure adjectives.
