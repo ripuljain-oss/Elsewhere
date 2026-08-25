@@ -1,0 +1,37 @@
+name: QA
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  photo-aspect:
+    name: Photo aspect ratio
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Guard CSS height:auto
+        run: node tests/css-height-auto.test.mjs
+      - name: Build
+        run: npm run build
+      - name: Playwright photo aspect
+        run: npx playwright test
+        env:
+          CI: true
