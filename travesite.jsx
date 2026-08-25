@@ -1054,6 +1054,7 @@ export default function Elsewhere() {
         }
         .block-feature img {
           width: 100%;
+          height: auto;
           display: block;
           cursor: pointer;
         }
@@ -1069,10 +1070,11 @@ export default function Elsewhere() {
         }
         .pair-grid > div img {
           width: 100%;
+          height: auto;
           display: block;
           cursor: pointer;
         }
-        .single-image { width: 100%; display: block; cursor: pointer; }
+        .single-image { width: 100%; height: auto; display: block; cursor: pointer; }
 
         .intro-block {
           max-width: 780px;
@@ -1203,6 +1205,7 @@ export default function Elsewhere() {
         }
         .recents-feed-entry img {
           width: 100%;
+          height: auto;
           display: block;
           cursor: pointer;
         }
@@ -1911,7 +1914,7 @@ export default function Elsewhere() {
                   decoding="async"
                   fetchPriority="high"
                   {...dimAttrs(activeRecent.image)}
-                  style={{ width: "100%", display: "block", cursor: "pointer" }}
+                  style={{ width: "100%", height: "auto", display: "block", cursor: "pointer" }}
                 />
               </RevealBlock>
             </div>
@@ -2085,7 +2088,7 @@ export default function Elsewhere() {
               loading="eager"
               decoding="async"
               {...dimAttrs(activeTrip.images[lightboxIndex])}
-              style={{ maxWidth: "100%", maxHeight: "calc(100vh - 160px)", objectFit: "contain" }}
+              style={{ width: "auto", height: "auto", maxWidth: "100%", maxHeight: "calc(100vh - 160px)", objectFit: "contain" }}
             />
             {activeTrip.imageCaptions?.[lightboxIndex] && (
               <p style={{
