@@ -1,5 +1,12 @@
 dist/
+node_modules/
+.venv/
+.env
+.env.*
+*.log
+
+# macOS
 .DS_Store
-Assets/Guatemala/
-Assets/Mexico City/
-Assets/RMNP/
+
+# Local masters — web copies live in public/Assets
+Assets/
