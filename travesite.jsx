@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { RECENTS as RECENTS_RAW } from "./recents";
+import { metaFor } from "./imageMeta";
 
 const BASE = import.meta.env.BASE_URL || "/";
 const asset = (path) => {
@@ -426,6 +427,11 @@ const PhotoCutline = ({ index, caption }) => {
   );
 };
 
+const dimAttrs = (src) => {
+  const m = metaFor(src);
+  return m ? { width: m.width, height: m.height } : {};
+};
+
 const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex = 0, naturalDimensions = false, loading = "lazy", src, alt, fetchPriority }) => {
   const imageSrc = src === null ? null : asset(src || (trip.images && trip.images[imageIndex]));
   const hasImage = Boolean(imageSrc);
@@ -442,7 +448,9 @@ const PhotoPlaceholder = ({ trip, style = {}, label, overlay = false, imageIndex
           src={imageSrc}
           alt={imageAlt}
           loading={loading}
+          decoding="async"
           fetchPriority={fetchPriority}
+          {...dimAttrs(imageSrc)}
           style={naturalDimensions ? {
             width: "100%", height: "auto", display: "block", verticalAlign: "top",
           } : {
@@ -497,6 +505,20 @@ const formatRecentDate = (dateStr) => {
   return `${months[parseInt(m,10)-1]} ${parseInt(d,10)}, ${y}`;
 };
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
 function useIntersectionObserver(ref, options = {}) {
   const [isVisible, setIsVisible] = useState(false);
   useEffect(() => {
@@ -512,13 +534,15 @@ function useIntersectionObserver(ref, options = {}) {
 }
 
 function RevealBlock({ children, delay = 0, style = {} }) {
+  const reduced = usePrefersReducedMotion();
   const ref = useRef(null);
   const visible = useIntersectionObserver(ref);
+  const show = reduced || visible;
   return (
     <div ref={ref} style={{
-      opacity: visible ? 1 : 0,
-      transform: visible ? "translateY(0)" : "translateY(32px)",
-      transition: `opacity 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}s, transform 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}s`,
+      opacity: show ? 1 : 0,
+      transform: show ? "translateY(0)" : "translateY(32px)",
+      transition: reduced ? "none" : `opacity 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}s, transform 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}s`,
       ...style,
     }}>
       {children}
@@ -533,11 +557,10 @@ export default function Elsewhere() {
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroFading, setHeroFading] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [imageMeta, setImageMeta] = useState({});
   const [activeRecent, setActiveRecent] = useState(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const containerRef = useRef(null);
   const heroIntervalRef = useRef(null);
   const lightboxTouchStartRef = useRef({ x: 0 });
@@ -545,24 +568,16 @@ export default function Elsewhere() {
   const lightboxRestoreFocusRef = useRef(null);
   const [heroReady, setHeroReady] = useState(() => new Set([0, 1]));
 
-  useEffect(() => {
-    if (!activeTrip?.images?.length) return;
-    setImageMeta({});
-    activeTrip.images.forEach((src, idx) => {
-      const img = new Image();
-      img.onload = () => {
-        const orientation = img.naturalHeight > img.naturalWidth * 1.05 ? "portrait" : "landscape";
-        setImageMeta((prev) => ({ ...prev, [idx]: { orientation } }));
-      };
-      img.src = src;
-    });
-  }, [activeTrip?.id]);
-
   const photoBlocks = (() => {
     if (!activeTrip?.images?.length) return [];
     const blocks = [];
     const n = activeTrip.images.length;
     const featured = new Set(activeTrip.featuredIndices || []);
+    const isPortrait = (idx) => {
+      const m = metaFor(activeTrip.images[idx]);
+      if (!m) return false;
+      return m.height > m.width * 1.05;
+    };
     let i = 0;
     while (i < n) {
       if (featured.has(i)) {
@@ -570,8 +585,8 @@ export default function Elsewhere() {
         i += 1;
         continue;
       }
-      const thisP = imageMeta[i]?.orientation === "portrait";
-      const nextP = imageMeta[i + 1]?.orientation === "portrait";
+      const thisP = isPortrait(i);
+      const nextP = isPortrait(i + 1);
       const nextFeatured = featured.has(i + 1);
       if (thisP && nextP && !nextFeatured && i + 1 < n) {
         blocks.push({ type: "pair", indices: [i, i + 1] });
@@ -636,9 +651,13 @@ export default function Elsewhere() {
   }, []);
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      clearInterval(heroIntervalRef.current);
+      return;
+    }
     startHeroInterval();
     return () => clearInterval(heroIntervalRef.current);
-  }, [startHeroInterval]);
+  }, [startHeroInterval, prefersReducedMotion]);
 
   useEffect(() => {
     setHeroReady((prev) => {
@@ -727,6 +746,11 @@ export default function Elsewhere() {
           setPage("recent-detail");
           return;
         }
+        setPage("not-found");
+        setActiveTrip(null);
+        setActiveRecent(null);
+        setLightboxOpen(false);
+        return;
       }
       if (hash === "recents") {
         setPage("recents");
@@ -741,9 +765,10 @@ export default function Elsewhere() {
         setPage("trip");
         return;
       }
-      setPage("home");
+      setPage("not-found");
       setActiveTrip(null);
       setActiveRecent(null);
+      setLightboxOpen(false);
     };
     applyRoute();
     window.addEventListener("hashchange", applyRoute);
@@ -753,6 +778,16 @@ export default function Elsewhere() {
       window.removeEventListener("popstate", applyRoute);
     };
   }, []);
+
+  useEffect(() => {
+    const site = "Elsewhere";
+    let title = `${site}, by Ripul Jain`;
+    if (page === "trip" && activeTrip) title = `${activeTrip.location} — ${site}`;
+    else if (page === "recents") title = `Recents — ${site}`;
+    else if (page === "recent-detail" && activeRecent) title = `${activeRecent.location} — ${site}`;
+    else if (page === "not-found") title = `Not found — ${site}`;
+    document.title = title;
+  }, [page, activeTrip, activeRecent]);
 
   const changeHero = (i) => {
     setHeroFading(true);
@@ -768,10 +803,9 @@ export default function Elsewhere() {
     const coverSrc = trip.coverImage || trip.images?.[0];
     const coverIdx = trip.images?.indexOf(coverSrc) ?? 0;
     return (
-    <div className="trip-card" style={{ height: "100%" }}
+    <button type="button" className="trip-card plain-btn" style={{ height: "100%" }}
       onClick={() => navigateTo(trip)}
-      onMouseEnter={() => setHoveredCard(trip.id)}
-      onMouseLeave={() => setHoveredCard(null)}
+      aria-label={`${trip.location}, ${trip.country} ${trip.year}`}
     >
       <div className="card-photo" style={{ position: "absolute", inset: 0 }}>
         <PhotoPlaceholder
@@ -799,7 +833,7 @@ export default function Elsewhere() {
         }}>{trip.country} · {trip.year}</div>
         {trip.tagline && <div className="card-tagline">{trip.tagline}</div>}
       </div>
-    </div>
+    </button>
     );
   };
 
@@ -811,11 +845,54 @@ export default function Elsewhere() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(26,26,24,0.18); border-radius: 2px; }
 
+        .skip-link {
+          position: absolute;
+          left: 16px;
+          top: -56px;
+          z-index: 400;
+          background: #1A1A18;
+          color: #F7F4EF;
+          padding: 10px 14px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          text-decoration: none;
+        }
+        .skip-link:focus { top: 12px; }
+
+        .plain-btn {
+          appearance: none;
+          background: none;
+          border: 0;
+          padding: 0;
+          margin: 0;
+          font: inherit;
+          color: inherit;
+          text-align: inherit;
+          cursor: pointer;
+        }
+
+        :focus-visible {
+          outline: 1px solid #C8A96E;
+          outline-offset: 3px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
+
         .trip-card {
           cursor: pointer;
           position: relative;
           overflow: hidden;
           border-radius: 2px;
+          width: 100%;
         }
         .trip-card .card-photo {
           width: 100%; height: 100%;
@@ -909,6 +986,8 @@ export default function Elsewhere() {
           border-radius: 4px;
           transition: all 0.5s cubic-bezier(0.22,1,0.36,1);
           background: rgba(255,255,255,0.35);
+          border: 0;
+          padding: 0;
         }
         .hero-dot.active { background: #C8A96E; }
         .lb-text-nav:hover { color: rgba(255,255,255,0.88) !important; }
@@ -1065,6 +1144,8 @@ export default function Elsewhere() {
           cursor: pointer;
           height: 220px;
           border-radius: 2px;
+          width: 100%;
+          text-align: left;
         }
         .trip-nav-card .nav-photo {
           width: 100%; height: 100%;
@@ -1090,6 +1171,8 @@ export default function Elsewhere() {
           cursor: pointer;
           overflow: hidden;
           position: relative;
+          width: 100%;
+          text-align: left;
         }
         .recent-card .recent-image {
           aspect-ratio: 3 / 2;
@@ -1175,6 +1258,19 @@ export default function Elsewhere() {
         }
       `}</style>
 
+      <a
+        href="#journal-main"
+        className="skip-link"
+        onClick={(e) => {
+          e.preventDefault();
+          const main = containerRef.current;
+          if (!main) return;
+          main.focus();
+        }}
+      >
+        Skip to content
+      </a>
+
       {/* ─── HEADER ─── */}
       <header style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
@@ -1185,7 +1281,7 @@ export default function Elsewhere() {
         borderBottom: scrolled ? "1px solid rgba(26,26,24,0.08)" : "1px solid transparent",
         transition: "all 0.6s cubic-bezier(0.22,1,0.36,1)",
       }}>
-        <div className="header-brand" onClick={navigateHome} style={{
+        <button type="button" className="header-brand plain-btn" onClick={navigateHome} style={{
           cursor: "pointer",
           display: "flex", alignItems: "baseline", gap: "14px",
           transition: "color 0.5s ease",
@@ -1205,7 +1301,7 @@ export default function Elsewhere() {
           }}>
             by Ripul Jain
           </span>
-        </div>
+        </button>
         <div style={{
           display: "flex", alignItems: "center", gap: "22px",
           fontFamily: "'DM Sans', sans-serif",
@@ -1214,14 +1310,14 @@ export default function Elsewhere() {
           transition: "color 0.5s ease",
           textShadow: overPhotoHero ? "0 1px 16px rgba(0,0,0,0.45)" : "none",
         }}>
-          <span className="nav-item" onClick={navigateToRecents} style={{ cursor: "pointer" }}>
+          <button type="button" className="nav-item plain-btn" onClick={navigateToRecents} style={{ cursor: "pointer" }}>
             Recents
-          </span>
+          </button>
         </div>
       </header>
 
       {/* ─── SCROLLABLE CONTENT ─── */}
-      <div ref={containerRef} style={{
+      <div id="journal-main" ref={containerRef} tabIndex={-1} style={{
         height: "100vh", overflowY: "auto", overflowX: "hidden",
         opacity: pageVisible ? 1 : 0,
         transition: "opacity 0.18s ease",
@@ -1326,9 +1422,14 @@ export default function Elsewhere() {
                 position: "absolute", bottom: "48px", right: "48px",
                 display: "flex", gap: "10px", alignItems: "center",
               }}>
-                {TRIPS.map((_, i) => (
-                  <div key={i} className={`hero-dot ${heroIdx === i ? "active" : ""}`}
+                {TRIPS.map((trip, i) => (
+                  <button
+                    key={trip.id}
+                    type="button"
+                    className={`hero-dot ${heroIdx === i ? "active" : ""}`}
                     onClick={(e) => { e.stopPropagation(); changeHero(i); }}
+                    aria-label={`Show ${trip.location}`}
+                    aria-current={heroIdx === i ? "true" : undefined}
                     style={{ width: heroIdx === i ? "28px" : "7px", height: "7px" }}
                   />
                 ))}
@@ -1405,24 +1506,24 @@ export default function Elsewhere() {
                         textTransform: "uppercase", fontWeight: 400,
                       }}>Mostly shot on mobile</div>
                     </div>
-                    <span onClick={navigateToRecents} className="nav-item" style={{
+                    <button type="button" onClick={navigateToRecents} className="nav-item plain-btn" style={{
                       cursor: "pointer", whiteSpace: "nowrap",
                       color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px",
                       textTransform: "uppercase", fontWeight: 400,
-                    }}>See all →</span>
+                    }}>See all →</button>
                   </div>
                 </RevealBlock>
                 <div className="recents-grid" style={{ marginTop: "20px" }}>
                   {RECENTS.slice(0, 3).map((entry, i) => (
                     <RevealBlock key={entry.slug} delay={i * 0.06}>
-                      <div className="recent-card" onClick={() => navigateToRecent(entry)}>
+                      <button type="button" className="recent-card plain-btn" onClick={() => navigateToRecent(entry)} aria-label={`${entry.location}, ${formatRecentDate(entry.date)}`}>
                         <div className="recent-image">
-                          <img src={entry.image} alt={altFromCaption(entry.caption, entry.location)} loading="lazy" />
+                          <img src={entry.image} alt={altFromCaption(entry.caption, entry.location)} loading="lazy" decoding="async" {...dimAttrs(entry.image)} />
                         </div>
                         <div className="recent-meta">
                           {formatRecentDate(entry.date)} · {entry.location}
                         </div>
-                      </div>
+                      </button>
                     </RevealBlock>
                   ))}
                 </div>
@@ -1539,6 +1640,8 @@ export default function Elsewhere() {
                             src={activeTrip.images[idx]}
                             alt={altFromCaption(activeTrip.imageCaptions?.[idx], activeTrip.location)}
                             loading="lazy"
+                            decoding="async"
+                            {...dimAttrs(activeTrip.images[idx])}
                             onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                           />
                           <PhotoCutline index={idx} caption={activeTrip.imageCaptions?.[idx]} />
@@ -1557,6 +1660,8 @@ export default function Elsewhere() {
                                   src={activeTrip.images[idx]}
                                   alt={altFromCaption(activeTrip.imageCaptions?.[idx], activeTrip.location)}
                                   loading="lazy"
+                                  decoding="async"
+                                  {...dimAttrs(activeTrip.images[idx])}
                                   onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                                 />
                                 <PhotoCutline index={idx} caption={activeTrip.imageCaptions?.[idx]} />
@@ -1576,6 +1681,8 @@ export default function Elsewhere() {
                           src={activeTrip.images[idx]}
                           alt={altFromCaption(activeTrip.imageCaptions?.[idx], activeTrip.location)}
                           loading="lazy"
+                          decoding="async"
+                          {...dimAttrs(activeTrip.images[idx])}
                           onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                         />
                         <PhotoCutline index={idx} caption={activeTrip.imageCaptions?.[idx]} />
@@ -1593,11 +1700,11 @@ export default function Elsewhere() {
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   borderTop: "1px solid rgba(26,26,24,0.08)", paddingTop: "36px",
                 }}>
-                  <span className="back-link" onClick={navigateHome} style={{
+                  <button type="button" className="back-link plain-btn" onClick={navigateHome} style={{
                     fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
                   }}>
                     <span className="arrow">←</span> All trips
-                  </span>
+                  </button>
                   <span style={{
                     color: "#8A8780", fontSize: "10px", letterSpacing: "3px",
                     textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
@@ -1611,7 +1718,7 @@ export default function Elsewhere() {
               <div className="trip-nav">
                 {!prevTrip && nextTrip && <div />}
                 {prevTrip && (
-                  <div className="trip-nav-card" onClick={() => navigateTo(prevTrip)}>
+                  <button type="button" className="trip-nav-card plain-btn" onClick={() => navigateTo(prevTrip)} aria-label={`Previous: ${prevTrip.location}`}>
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={prevTrip}
@@ -1644,10 +1751,10 @@ export default function Elsewhere() {
                         {prevTrip.country} · {prevTrip.year}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 )}
                 {nextTrip && (
-                  <div className="trip-nav-card" onClick={() => navigateTo(nextTrip)}>
+                  <button type="button" className="trip-nav-card plain-btn" onClick={() => navigateTo(nextTrip)} aria-label={`Next: ${nextTrip.location}`}>
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={nextTrip}
@@ -1680,7 +1787,7 @@ export default function Elsewhere() {
                         {nextTrip.country} · {nextTrip.year}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 )}
               </div>
             </RevealBlock>
@@ -1742,6 +1849,8 @@ export default function Elsewhere() {
                       src={entry.image}
                       alt={altFromCaption(entry.caption, entry.location)}
                       loading="lazy"
+                      decoding="async"
+                      {...dimAttrs(entry.image)}
                       onClick={() => navigateToRecent(entry)}
                     />
                     <div className="entry-meta">
@@ -1758,11 +1867,11 @@ export default function Elsewhere() {
                 <div style={{
                   borderTop: "1px solid rgba(26,26,24,0.08)", paddingTop: "36px",
                 }}>
-                  <span className="back-link" onClick={navigateHome} style={{
+                  <button type="button" className="back-link plain-btn" onClick={navigateHome} style={{
                     fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
                   }}>
                     <span className="arrow">←</span> All destinations
-                  </span>
+                  </button>
                 </div>
               </RevealBlock>
             </div>
@@ -1785,11 +1894,11 @@ export default function Elsewhere() {
               maxWidth: "1140px", margin: "0 auto", padding: "140px 48px 28px",
             }}>
               <RevealBlock>
-                <span className="back-link" onClick={navigateToRecents} style={{
+                <button type="button" className="back-link plain-btn" onClick={navigateToRecents} style={{
                   fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
                 }}>
                   <span className="arrow">←</span> All recents
-                </span>
+                </button>
               </RevealBlock>
             </div>
 
@@ -1799,7 +1908,9 @@ export default function Elsewhere() {
                   src={activeRecent.image}
                   alt={altFromCaption(activeRecent.caption, activeRecent.location)}
                   loading="eager"
+                  decoding="async"
                   fetchPriority="high"
+                  {...dimAttrs(activeRecent.image)}
                   style={{ width: "100%", display: "block", cursor: "pointer" }}
                 />
               </RevealBlock>
@@ -1825,6 +1936,48 @@ export default function Elsewhere() {
               </RevealBlock>
             </div>
 
+            <footer style={{
+              borderTop: "1px solid rgba(26,26,24,0.06)",
+              padding: "30px 48px", textAlign: "center",
+            }}>
+              <p style={{ color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px", textTransform: "uppercase" }}>
+                © 2026 — Elsewhere
+              </p>
+            </footer>
+          </div>
+        )}
+
+        {page === "not-found" && (
+          <div>
+            <div style={{
+              maxWidth: "720px", margin: "0 auto", padding: "180px 48px 100px",
+              textAlign: "center",
+            }}>
+              <div style={{
+                color: "#8A8780", fontSize: "10px", letterSpacing: "5px",
+                textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
+                marginBottom: "22px",
+              }}>
+                Elsewhere
+              </div>
+              <h1 style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "clamp(2.6rem, 6vw, 4.2rem)",
+                color: "#1A1A18", fontWeight: 300, lineHeight: 1,
+                letterSpacing: "-1px",
+              }}>
+                This page is not in the journal.
+              </h1>
+              <div style={{
+                width: "36px", height: "1px", background: "rgba(42,40,34,0.2)",
+                margin: "28px auto",
+              }} />
+              <button type="button" className="back-link plain-btn" onClick={navigateHome} style={{
+                fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
+              }}>
+                <span className="arrow">←</span> All destinations
+              </button>
+            </div>
             <footer style={{
               borderTop: "1px solid rgba(26,26,24,0.06)",
               padding: "30px 48px", textAlign: "center",
@@ -1929,7 +2082,9 @@ export default function Elsewhere() {
             <img
               src={activeTrip.images[lightboxIndex]}
               alt={altFromCaption(activeTrip.imageCaptions?.[lightboxIndex], activeTrip.location)}
-              loading="lazy"
+              loading="eager"
+              decoding="async"
+              {...dimAttrs(activeTrip.images[lightboxIndex])}
               style={{ maxWidth: "100%", maxHeight: "calc(100vh - 160px)", objectFit: "contain" }}
             />
             {activeTrip.imageCaptions?.[lightboxIndex] && (
