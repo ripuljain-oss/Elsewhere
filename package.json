@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/css-height-auto.test.mjs && npm run build && playwright test",
+    "test": "node tests/css-height-auto.test.mjs && node tests/sitemap.test.mjs && npm run build && node tests/sitemap.test.mjs && playwright test",
     "test:css": "node tests/css-height-auto.test.mjs"
   },
   "dependencies": {

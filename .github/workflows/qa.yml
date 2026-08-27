@@ -29,8 +29,12 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Guard CSS height:auto
         run: node tests/css-height-auto.test.mjs
+      - name: Guard sitemap and robots
+        run: node tests/sitemap.test.mjs
       - name: Build
         run: npm run build
+      - name: Confirm sitemap copied under /travel/
+        run: node tests/sitemap.test.mjs
       - name: Playwright photo aspect
         run: npx playwright test
         env:
