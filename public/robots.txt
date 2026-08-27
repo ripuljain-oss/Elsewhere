@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://jainfam.net/sitemap.xml
+Sitemap: https://jainfam.net/travel/sitemap.xml
