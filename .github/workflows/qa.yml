@@ -33,7 +33,7 @@ jobs:
         run: node tests/sitemap.test.mjs
       - name: Build
         run: npm run build
-      - name: Confirm sitemap copied under /travel/
+      - name: Confirm sitemap in dist
         run: node tests/sitemap.test.mjs
       - name: Playwright photo aspect
         run: npx playwright test

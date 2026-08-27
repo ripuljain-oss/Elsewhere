@@ -44,15 +44,26 @@ for (const loc of locs) {
   }
 }
 
-const distSitemap = join(root, "dist/travel/sitemap.xml");
 if (existsSync(join(root, "dist"))) {
+  const distSitemap = join(root, "dist/sitemap.xml");
+  const distRobots = join(root, "dist/robots.txt");
   if (!existsSync(distSitemap)) {
-    fail("dist/travel/sitemap.xml missing after build — /travel/sitemap.xml would not be a static file");
+    fail("dist/sitemap.xml missing after build — Vite must copy public/sitemap.xml");
   } else {
     const built = readFileSync(distSitemap, "utf8");
     if (!built.includes("<loc>https://jainfam.net/travel/</loc>")) {
-      fail("dist/travel/sitemap.xml is missing the homepage loc");
+      fail("dist/sitemap.xml is missing the homepage loc");
     }
+  }
+  if (!existsSync(distRobots)) {
+    fail("dist/robots.txt missing after build");
+  } else if (!readFileSync(distRobots, "utf8").includes("https://jainfam.net/travel/sitemap.xml")) {
+    fail("dist/robots.txt must advertise https://jainfam.net/travel/sitemap.xml");
+  }
+  // A dist/travel/ copy fights Vercel: rewrite /travel/:path* → /:path* plus a
+  // real dist/travel directory can hang production alias assignment.
+  if (existsSync(join(root, "dist/travel"))) {
+    fail("do not emit dist/travel/; Vercel rewrites /travel/* onto dist root");
   }
 }
 
