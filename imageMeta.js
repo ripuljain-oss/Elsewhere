@@ -104,7 +104,7 @@ export const IMAGE_META = {
   "/Assets/Recents/IMG_0597.jpg": { width: 2400, height: 1681 },
   "/Assets/Recents/IMG_0997.jpg": { width: 2400, height: 1700 },
   "/Assets/Recents/IMG_1143.jpg": { width: 1074, height: 1400 },
-  "/Assets/Recents/IMG_estes-park-elk.jpg": { width: 1536, height: 1024 },
+  "/Assets/Recents/IMG_estes-park-elk.jpg": { width: 1800, height: 1350 },
   "/Assets/Roatan/B3A76398-D187-4E63-B43A-D429C82426D4.jpg": { width: 1796, height: 2400 },
   "/Assets/Roatan/IMG_0247.jpg": { width: 1678, height: 2400 },
   "/Assets/Roatan/IMG_0259.jpg": { width: 1801, height: 2400 },
