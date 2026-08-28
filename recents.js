@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "estes-park-elk-window",
+    date: "2026-08-28",
+    image: "/Assets/Recents/IMG_estes-park-elk.jpg",
+    location: "Estes Park, Colorado",
+    caption: "Elk in the meadow outside an Estes Park rental. The town sits at 7,522 feet on the eastern edge of Rocky Mountain National Park.",
+  },
+  {
     slug: "la-quinta-resort-palm-springs",
     date: "2026-05-10",
     image: "/Assets/Recents/IMG_1143.jpg",
