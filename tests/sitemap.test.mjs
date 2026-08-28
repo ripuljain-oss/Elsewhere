@@ -35,12 +35,18 @@ if (!sitemap.includes("<loc>https://jainfam.net/travel/</loc>")) {
 }
 
 const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+if (locs.length !== 1) {
+  fail(`sitemap must list only the crawlable homepage; got ${locs.length} loc(s): ${locs.join(", ")}`);
+}
 if (locs[0] !== "https://jainfam.net/travel/") {
   fail(`homepage loc must be first; got ${locs[0] || "(none)"}`);
 }
 for (const loc of locs) {
   if (!loc.startsWith("https://jainfam.net/travel/")) {
     fail(`unexpected sitemap loc outside the journal: ${loc}`);
+  }
+  if (loc.includes("#")) {
+    fail(`hash-fragment loc is not a crawlable page: ${loc}`);
   }
 }
 
@@ -53,6 +59,9 @@ if (existsSync(join(root, "dist"))) {
     const built = readFileSync(distSitemap, "utf8");
     if (!built.includes("<loc>https://jainfam.net/travel/</loc>")) {
       fail("dist/sitemap.xml is missing the homepage loc");
+    }
+    if (built.includes("#")) {
+      fail("dist/sitemap.xml still lists hash-fragment URLs");
     }
   }
   if (!existsSync(distRobots)) {
@@ -72,4 +81,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("sitemap: robots points at /travel/sitemap.xml; urlset includes homepage");
+console.log("sitemap: robots points at /travel/sitemap.xml; urlset is homepage-only");

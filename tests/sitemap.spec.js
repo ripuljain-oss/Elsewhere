@@ -9,6 +9,8 @@ test.describe("sitemap and robots", () => {
     const body = await res.text();
     expect(body).toContain('xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
     expect(body).toContain("<loc>https://jainfam.net/travel/</loc>");
+    expect(body).not.toContain("#");
+    expect((body.match(/<loc>/g) || []).length).toBe(1);
   });
 
   test("robots.txt under /travel/ points at the /travel/ sitemap", async ({ request }) => {
