@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "cafe-tabeeb-south-loop",
+    date: "2026-08-30",
+    image: "/Assets/Recents/File_000.jpeg",
+    location: "South Loop, Chicago",
+    caption: "Cafe Tabeeb wall sign at 720 S. Wells Street in Chicago's South Loop. Tabeeb is the Arabic word for healer or doctor.",
+  },
+  {
     slug: "estes-park-elk-window",
     date: "2026-08-28",
     image: "/Assets/Recents/IMG_estes-park-elk.jpg",
