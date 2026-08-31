@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "river-city-lobby-south-loop",
+    date: "2026-08-30",
+    image: "/Assets/Recents/river-city-lobby-south-loop.jpeg",
+    location: "South Loop, Chicago",
+    caption: "Mailboxes and globe fixtures in the lobby of River City, Bertrand Goldberg's 1986 riverfront residential complex in Chicago's South Loop.",
+  },
+  {
     slug: "cafe-tabeeb-south-loop",
     date: "2026-08-30",
     image: "/Assets/Recents/File_000.jpeg",

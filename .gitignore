@@ -14,4 +14,4 @@ playwright/.cache/
 .DS_Store
 
 # Local masters — web copies live in public/Assets
-Assets/
+/Assets/
