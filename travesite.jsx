@@ -782,11 +782,54 @@ export default function Elsewhere() {
   useEffect(() => {
     const site = "Elsewhere";
     let title = `${site}, by Ripul Jain`;
-    if (page === "trip" && activeTrip) title = `${activeTrip.location} — ${site}`;
-    else if (page === "recents") title = `Recents — ${site}`;
-    else if (page === "recent-detail" && activeRecent) title = `${activeRecent.location} — ${site}`;
-    else if (page === "not-found") title = `Not found — ${site}`;
+    let description = "A travel photo journal by Ripul Jain — destinations, recents, and field notes from the road.";
+    let canonical = "https://jainfam.net/travel/";
+    let image = "https://jainfam.net/travel/Assets/RMNP/DSC_3271.jpg";
+
+    if (page === "trip" && activeTrip) {
+      title = `${activeTrip.location} — ${site}`;
+      description = `${activeTrip.location}, ${activeTrip.country} (${activeTrip.year}): ${activeTrip.tagline || activeTrip.intro || ""}`.trim();
+      canonical = `https://jainfam.net/travel/#${activeTrip.slug}`;
+      const cover = activeTrip.coverImage || activeTrip.images?.[0];
+      if (cover) image = cover.startsWith("http") ? cover : `https://jainfam.net${cover.startsWith("/") ? "" : "/travel/"}${cover}`;
+    } else if (page === "recents") {
+      title = `Recents — ${site}`;
+      description = "Recent travel photos, field notes, and visual fragments by Ripul Jain.";
+      canonical = "https://jainfam.net/travel/#recents";
+    } else if (page === "recent-detail" && activeRecent) {
+      title = `${activeRecent.location} — ${site}`;
+      description = `${activeRecent.location}: ${activeRecent.caption || ""}`.trim();
+      canonical = `https://jainfam.net/travel/#recents/${activeRecent.slug}`;
+      if (activeRecent.image) {
+        image = activeRecent.image.startsWith("http")
+          ? activeRecent.image
+          : `https://jainfam.net${activeRecent.image.startsWith("/") ? "" : "/travel/"}${activeRecent.image}`;
+      }
+    } else if (page === "not-found") {
+      title = `Not found — ${site}`;
+    }
+
     document.title = title;
+
+    const setMeta = (name, content, attr = "name") => {
+      if (!content) return;
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    setMeta("description", description, "name");
+    setMeta("og:title", title, "property");
+    setMeta("og:description", description, "property");
+    setMeta("og:url", canonical, "property");
+    setMeta("og:image", image, "property");
+    setMeta("twitter:title", title, "name");
+    setMeta("twitter:description", description, "name");
+    setMeta("twitter:image", image, "name");
   }, [page, activeTrip, activeRecent]);
 
   const changeHero = (i) => {
@@ -1726,6 +1769,10 @@ export default function Elsewhere() {
                       <PhotoPlaceholder
                         trip={prevTrip}
                         src={prevTrip.coverImage || prevTrip.images?.[0]}
+                        alt={altFromCaption(
+                          prevTrip.imageCaptions?.[Math.max(0, prevTrip.images.indexOf(prevTrip.coverImage || prevTrip.images?.[0]))],
+                          `${prevTrip.location}, ${prevTrip.country}`
+                        )}
                         style={{ width: "100%", height: "100%" }}
                         loading="lazy"
                       />
@@ -1762,6 +1809,10 @@ export default function Elsewhere() {
                       <PhotoPlaceholder
                         trip={nextTrip}
                         src={nextTrip.coverImage || nextTrip.images?.[0]}
+                        alt={altFromCaption(
+                          nextTrip.imageCaptions?.[Math.max(0, nextTrip.images.indexOf(nextTrip.coverImage || nextTrip.images?.[0]))],
+                          `${nextTrip.location}, ${nextTrip.country}`
+                        )}
                         style={{ width: "100%", height: "100%" }}
                         loading="lazy"
                       />
@@ -1921,14 +1972,16 @@ export default function Elsewhere() {
 
             <div style={{ maxWidth: "900px", margin: "0 auto 100px", padding: "0 48px" }}>
               <RevealBlock>
-                <div style={{
+                <h1 style={{
                   padding: "12px 0 0",
                   fontFamily: "'DM Sans', sans-serif",
                   color: "#8A8780",
                   fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
+                  fontWeight: 400,
+                  margin: 0,
                 }}>
                   {formatRecentDate(activeRecent.date)} · {activeRecent.location}
-                </div>
+                </h1>
                 <p style={{
                   marginTop: "10px",
                   fontFamily: "'Cormorant Garamond', serif", fontStyle: "normal",

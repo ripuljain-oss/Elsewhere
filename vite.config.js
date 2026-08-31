@@ -4,4 +4,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   base: "/travel/",
   plugins: [react()],
+  build: {
+    assetsDir: "_assets",
+  },
 });

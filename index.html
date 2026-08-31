@@ -42,11 +42,80 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Elsewhere",
-        "url": "https://jainfam.net/travel/",
-        "description": "A travel photo journal by Ripul Jain.",
-        "author": { "@type": "Person", "name": "Ripul Jain" }
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://jainfam.net/travel/#website",
+            "name": "Elsewhere",
+            "url": "https://jainfam.net/travel/",
+            "description": "A travel photo journal by Ripul Jain — destinations, recents, and field notes from the road.",
+            "inLanguage": "en-US",
+            "publisher": {
+              "@id": "https://jainfam.net/travel/#author"
+            }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://jainfam.net/travel/#author",
+            "name": "Ripul Jain",
+            "url": "https://jainfam.net/travel/",
+            "jobTitle": "Travel Photographer & Writer"
+          },
+          {
+            "@type": "ItemList",
+            "name": "Featured Travel Destinations & Photo Journals",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Rocky Mountain National Park, United States",
+                "url": "https://jainfam.net/travel/#rocky-mountain-national-park"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Antigua, Guatemala",
+                "url": "https://jainfam.net/travel/#guatemala"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Mérida, Mexico",
+                "url": "https://jainfam.net/travel/#merida"
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "name": "Olympic National Park, United States",
+                "url": "https://jainfam.net/travel/#olympic-national-park"
+              },
+              {
+                "@type": "ListItem",
+                "position": 5,
+                "name": "Panama City & Casco Viejo, Panama",
+                "url": "https://jainfam.net/travel/#panama"
+              },
+              {
+                "@type": "ListItem",
+                "position": 6,
+                "name": "Roatán, Honduras",
+                "url": "https://jainfam.net/travel/#roatan"
+              },
+              {
+                "@type": "ListItem",
+                "position": 7,
+                "name": "Lisbon & The Algarve, Portugal",
+                "url": "https://jainfam.net/travel/#portugal"
+              },
+              {
+                "@type": "ListItem",
+                "position": 8,
+                "name": "Mexico City, Mexico",
+                "url": "https://jainfam.net/travel/#mexico-city"
+              }
+            ]
+          }
+        ]
       }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
