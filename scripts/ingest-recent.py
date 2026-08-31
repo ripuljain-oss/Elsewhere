@@ -226,9 +226,10 @@ def process_image(file_path: Path, args):
 
     # Slug
     slug = args.slug or slugify(f"{location}-{file_path.stem}")
-    
+
     # Target filename in public/Assets/Recents/
-    out_name = f"{file_path.stem}.jpeg" if file_path.suffix.lower() == ".jpeg" else f"{file_path.stem}.jpg"
+    clean_stem = slug if (" " in file_path.stem or file_path.stem.lower() in {"jpeg image", "image", "photo"}) else file_path.stem
+    out_name = f"{clean_stem}.jpeg" if file_path.suffix.lower() == ".jpeg" else f"{clean_stem}.jpg"
     dest_path = PUBLIC_RECENTS_DIR / out_name
     rel_path = f"/Assets/Recents/{out_name}"
 
@@ -301,7 +302,9 @@ def process_image(file_path: Path, args):
     # 8. Auto-merge if not disabled
     if not args.no_merge:
         print("  Merging PR to main...")
-        run_cmd(["gh", "pr", "merge", "--merge", "--auto", branch_name], check=False)
+        # Direct merge
+        merge_res = run_cmd(["gh", "pr", "merge", branch_name, "--merge", "--delete-branch"], check=False)
+        print(f"  Merge output: {merge_res}")
         run_cmd("git checkout main")
         run_cmd("git pull origin main")
         print("  ✓ Merged to main and synced.")
