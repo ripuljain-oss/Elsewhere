@@ -1308,8 +1308,8 @@ export default function Elsewhere() {
         <div style={{
           display: "flex", alignItems: "center", gap: "22px",
           fontFamily: "'DM Sans', sans-serif",
-          fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
-          color: headerNavColor, fontWeight: 400,
+          fontSize: "13px", letterSpacing: "2px", textTransform: "uppercase",
+          color: headerNavColor, fontWeight: 500,
           transition: "color 0.5s ease",
           textShadow: overPhotoHero ? "0 1px 16px rgba(0,0,0,0.45)" : "none",
         }}>
