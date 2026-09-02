@@ -827,9 +827,18 @@ export default function Elsewhere() {
     setMeta("og:description", description, "property");
     setMeta("og:url", canonical, "property");
     setMeta("og:image", image, "property");
+    setMeta("og:type", page === "trip" || page === "recent-detail" ? "article" : "website", "property");
     setMeta("twitter:title", title, "name");
     setMeta("twitter:description", description, "name");
     setMeta("twitter:image", image, "name");
+
+    let canonicalEl = document.querySelector('link[rel="canonical"]');
+    if (!canonicalEl) {
+      canonicalEl = document.createElement("link");
+      canonicalEl.setAttribute("rel", "canonical");
+      document.head.appendChild(canonicalEl);
+    }
+    canonicalEl.setAttribute("href", canonical);
   }, [page, activeTrip, activeRecent]);
 
   const changeHero = (i) => {
@@ -864,11 +873,12 @@ export default function Elsewhere() {
         position: "absolute", bottom: 0, left: 0, right: 0,
         padding: "22px 20px 18px",
       }}>
-        <div style={{
+        <h3 style={{
           fontFamily: "'DM Sans', sans-serif",
           fontSize: "16px",
           color: "white", fontWeight: 500, letterSpacing: "0.3px", lineHeight: 1.3,
-        }}>{trip.location}</div>
+          margin: 0,
+        }}>{trip.location}</h3>
         <div style={{
           color: "rgba(255,255,255,0.55)", fontSize: "10px",
           letterSpacing: "2.5px", textTransform: "uppercase",
