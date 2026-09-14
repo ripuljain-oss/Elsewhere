@@ -20,7 +20,7 @@ export const RECENTS = [
     date: "2026-09-14",
     image: "/Assets/Recents/bears-madden-27-mural.jpeg",
     location: "Halsted Street, Chicago",
-    caption: "Madden NFL 27 mural for the Chicago Bears on North Halsted Street. Caleb Williams, the first overall pick in the 2024 NFL Draft, wears number 18.",
+    caption: "Madden NFL 27 mural for the Chicago Bears on North Halsted Street.",
   },
   {
     slug: "river-city-lobby-south-loop",
