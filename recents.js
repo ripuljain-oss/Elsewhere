@@ -16,6 +16,13 @@
 
 export const RECENTS = [
   {
+    slug: "bears-madden-27-mural",
+    date: "2026-09-14",
+    image: "/Assets/Recents/bears-madden-27-mural.jpeg",
+    location: "Halsted Street, Chicago",
+    caption: "Madden NFL 27 mural for the Chicago Bears on North Halsted Street.",
+  },
+  {
     slug: "river-city-lobby-south-loop",
     date: "2026-08-30",
     image: "/Assets/Recents/river-city-lobby-south-loop.jpeg",
