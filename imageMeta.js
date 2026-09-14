@@ -98,6 +98,7 @@ export const IMAGE_META = {
   "/Assets/RMNP/DSC_3271.jpg": { width: 2400, height: 1597 },
   "/Assets/RMNP/DSC_3284.jpg": { width: 1597, height: 2400 },
   "/Assets/RMNP/DSC_3371.jpg": { width: 1715, height: 2400 },
+  "/Assets/Recents/bears-madden-27-mural.jpeg": { width: 1206, height: 1206 },
   "/Assets/Recents/river-city-lobby-south-loop.jpeg": { width: 1800, height: 1800 },
   "/Assets/Recents/File_000.jpeg": { width: 1800, height: 1800 },
   "/Assets/Recents/IMG_0117.jpg": { width: 2400, height: 1800 },
