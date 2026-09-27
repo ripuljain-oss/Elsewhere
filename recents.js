@@ -16,6 +16,41 @@
 
 export const RECENTS = [
   {
+    slug: "hancock-water-tower-skylight",
+    date: "2026-09-20",
+    image: "/Assets/Recents/hancock-water-tower-skylight.jpg",
+    location: "Magnificent Mile, Chicago",
+    caption: "875 North Michigan Avenue, the former John Hancock Center, framed by the Water Tower Place skylight on a foggy afternoon.",
+  },
+  {
+    slug: "mca-puerto-rican-flag",
+    date: "2026-09-20",
+    image: "/Assets/Recents/mca-puerto-rican-flag.jpg",
+    location: "Museum of Contemporary Art, Chicago",
+    caption: "Visitors at MCA Chicago before a wall-sized photograph of a Puerto Rican flag raised outdoors, during Dancing the Revolution: From Dancehall to Reggaetón.",
+  },
+  {
+    slug: "mca-archival-photo-wall",
+    date: "2026-09-20",
+    image: "/Assets/Recents/mca-archival-photo-wall.jpg",
+    location: "Museum of Contemporary Art, Chicago",
+    caption: "Vintage family photographs pinned across a weathered teal wall in a gallery at the Museum of Contemporary Art Chicago.",
+  },
+  {
+    slug: "fourth-presbyterian-arcade",
+    date: "2026-09-20",
+    image: "/Assets/Recents/fourth-presbyterian-arcade.jpg",
+    location: "Fourth Presbyterian Church, Chicago",
+    caption: "Two boys walking the Gothic arcade of Fourth Presbyterian Church on Michigan Avenue, designed by Ralph Adams Cram and opened in 1914.",
+  },
+  {
+    slug: "fourth-presbyterian-michigan-ave",
+    date: "2026-09-20",
+    image: "/Assets/Recents/fourth-presbyterian-michigan-ave.jpg",
+    location: "Fourth Presbyterian Church, Chicago",
+    caption: "Fourth Presbyterian Church on North Michigan Avenue, its ivy-covered Gothic Revival facade set against the Mag Mile skyline.",
+  },
+  {
     slug: "bears-madden-27-mural",
     date: "2026-09-14",
     image: "/Assets/Recents/bears-madden-27-mural.jpeg",

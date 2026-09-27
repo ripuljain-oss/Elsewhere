@@ -92,10 +92,10 @@ test.describe("photo aspect ratio", () => {
 
     const photos = page.locator(".recents-feed-entry img");
     await expect(photos.first()).toBeVisible();
-    await expect(photos).toHaveCount(9);
+    await expect(photos).toHaveCount(14);
 
     const { checked, stretched } = await measurePhotos(page, photos);
-    expect(checked.length, "expected recents photos to paint").toBe(9);
+    expect(checked.length, "expected recents photos to paint").toBe(14);
     failIfStretched(stretched);
   });
 
