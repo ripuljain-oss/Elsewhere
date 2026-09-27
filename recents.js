@@ -41,7 +41,7 @@ export const RECENTS = [
     date: "2026-09-20",
     image: "/Assets/Recents/fourth-presbyterian-arcade.jpg",
     location: "Fourth Presbyterian Church, Chicago",
-    caption: "Two boys walking the Gothic arcade of Fourth Presbyterian Church on Michigan Avenue, designed by Ralph Adams Cram and opened in 1914.",
+    caption: "Walking the Gothic arcade of Fourth Presbyterian Church on Michigan Avenue, designed by Ralph Adams Cram and opened in 1914.",
   },
   {
     slug: "fourth-presbyterian-michigan-ave",
