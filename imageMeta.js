@@ -96,6 +96,7 @@ export const IMAGE_META = {
   "/Assets/RMNP/DSC_3251.jpg": { width: 1597, height: 2400 },
   "/Assets/RMNP/DSC_3268.jpg": { width: 1597, height: 2400 },
   "/Assets/RMNP/DSC_3271.jpg": { width: 2400, height: 1597 },
+  "/Assets/RMNP/DSC_3271-hero.jpg": { width: 1600, height: 1065 },
   "/Assets/RMNP/DSC_3284.jpg": { width: 1597, height: 2400 },
   "/Assets/RMNP/DSC_3371.jpg": { width: 1715, height: 2400 },
   "/Assets/Recents/hancock-water-tower-skylight.jpg": { width: 1456, height: 1800 },

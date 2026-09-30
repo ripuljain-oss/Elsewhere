@@ -10,6 +10,19 @@ const asset = (path) => {
   return `${BASE}${String(path).replace(/^\//, "")}`;
 };
 
+// Smaller JPEGs for cropped covers. Journal and lightbox keep the full file.
+const HERO_SOURCES = {
+  "/Assets/RMNP/DSC_3271.jpg": "/Assets/RMNP/DSC_3271-hero.jpg",
+};
+
+const heroSrc = (src) => {
+  if (!src) return src;
+  let path = String(src);
+  if (BASE !== "/" && path.startsWith(BASE)) path = `/${path.slice(BASE.length)}`;
+  const variant = HERO_SOURCES[path];
+  return variant ? asset(variant) : src;
+};
+
 const RECENTS = [...RECENTS_RAW]
   .map((entry) => ({ ...entry, image: asset(entry.image) }))
   .sort((a, b) => b.date.localeCompare(a.date));
@@ -862,7 +875,7 @@ export default function Elsewhere() {
       <div className="card-photo" style={{ position: "absolute", inset: 0 }}>
         <PhotoPlaceholder
           trip={trip}
-          src={coverSrc}
+          src={heroSrc(coverSrc)}
           alt={altFromCaption(trip.imageCaptions?.[coverIdx >= 0 ? coverIdx : 0], trip.location)}
           style={{ width: "100%", height: "100%" }}
           loading="lazy"
@@ -1403,7 +1416,7 @@ export default function Elsewhere() {
                   }}>
                     <PhotoPlaceholder
                       trip={trip}
-                      src={shouldLoad ? coverSrc : null}
+                      src={shouldLoad ? heroSrc(coverSrc) : null}
                       alt={altFromCaption(trip.imageCaptions?.[coverIdx >= 0 ? coverIdx : 0], trip.location)}
                       fetchPriority={i === 0 ? "high" : undefined}
                       loading={i === 0 ? "eager" : "lazy"}
@@ -1611,7 +1624,7 @@ export default function Elsewhere() {
             >
               <PhotoPlaceholder
                 trip={activeTrip}
-                src={activeTrip.coverImage || activeTrip.images?.[0]}
+                src={heroSrc(activeTrip.coverImage || activeTrip.images?.[0])}
                 alt={altFromCaption(
                   activeTrip.imageCaptions?.[Math.max(0, activeTrip.images.indexOf(activeTrip.coverImage || activeTrip.images?.[0]))],
                   activeTrip.location
@@ -1778,7 +1791,7 @@ export default function Elsewhere() {
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={prevTrip}
-                        src={prevTrip.coverImage || prevTrip.images?.[0]}
+                        src={heroSrc(prevTrip.coverImage || prevTrip.images?.[0])}
                         alt={altFromCaption(
                           prevTrip.imageCaptions?.[Math.max(0, prevTrip.images.indexOf(prevTrip.coverImage || prevTrip.images?.[0]))],
                           `${prevTrip.location}, ${prevTrip.country}`
@@ -1818,7 +1831,7 @@ export default function Elsewhere() {
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={nextTrip}
-                        src={nextTrip.coverImage || nextTrip.images?.[0]}
+                        src={heroSrc(nextTrip.coverImage || nextTrip.images?.[0])}
                         alt={altFromCaption(
                           nextTrip.imageCaptions?.[Math.max(0, nextTrip.images.indexOf(nextTrip.coverImage || nextTrip.images?.[0]))],
                           `${nextTrip.location}, ${nextTrip.country}`
