@@ -120,6 +120,15 @@ if (existsSync(join(root, "dist"))) {
     if (!html.includes("/travel/_assets/")) {
       fail(`dist/${rel} is missing the absolute /travel/_assets bundle (nested shells would 404 a relative script)`);
     }
+    if (rel.endsWith("/index.html") && rel !== "index.html") {
+      const flat = rel.replace(/\/index\.html$/, ".html");
+      const flatFile = join(root, "dist", flat);
+      if (!existsSync(flatFile)) {
+        fail(`missing Vite-preview shell dist/${flat} (preview rewrites /path to /path.html)`);
+      } else if (!readFileSync(flatFile, "utf8").includes(titlePart)) {
+        fail(`dist/${flat} title does not include ${titlePart}`);
+      }
+    }
     const title = html.match(/<title>([^<]*)<\/title>/)?.[1] || "";
     if (seenTitles.has(title)) fail(`dist shell title is not unique: ${title}`);
     seenTitles.add(title);

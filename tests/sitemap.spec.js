@@ -34,11 +34,13 @@ test.describe("prerendered shells", () => {
   test("trip, recents, and entry HTML differ without executing React", async ({ request }) => {
     const home = await (await request.get("/travel/")).text();
     const merida = await (await request.get("/travel/merida")).text();
+    const meridaSlash = await (await request.get("/travel/merida/")).text();
     const recents = await (await request.get("/travel/recents")).text();
     const entry = await (await request.get("/travel/recents/hancock-water-tower-skylight")).text();
 
     expect(home).toContain("<title>Elsewhere, by Ripul Jain</title>");
     expect(merida).toContain("<title>Mérida — Elsewhere</title>");
+    expect(meridaSlash).toContain("<title>Mérida — Elsewhere</title>");
     expect(merida).toContain('href="https://jainfam.net/travel/merida"');
     expect(recents).toContain("<title>Recents — Elsewhere</title>");
     expect(entry).toContain("875 North Michigan Avenue");

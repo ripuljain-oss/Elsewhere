@@ -41,15 +41,25 @@ if (!existsSync(templatePath)) {
 }
 const template = readFileSync(templatePath, "utf8");
 
+function shellPaths(suffix) {
+  // Vite preview rewrites /merida → /merida.html.
+  // Vercel, after /travel/:path* → /:path*, serves /merida from merida/index.html.
+  // A file and a directory can share the stem (merida.html and merida/), so emit both.
+  if (!suffix) return ["index.html"];
+  return [`${suffix}.html`, join(suffix, "index.html")];
+}
+
 for (const page of pages) {
   const html = applyHead(template, page.head, { tripSlugs });
-  const rel = page.suffix ? join(page.suffix, "index.html") : "index.html";
-  const out = join(distDir, rel);
-  if (out.startsWith(join(distDir, "travel") + "/") || out === join(distDir, "travel")) {
-    throw new Error(`refusing to write ${out}`);
+  for (const rel of shellPaths(page.suffix)) {
+    const out = join(distDir, rel);
+    const travelDir = join(distDir, "travel");
+    if (out === travelDir || out.startsWith(travelDir + "/")) {
+      throw new Error(`refusing to write ${out}`);
+    }
+    mkdirSync(dirname(out), { recursive: true });
+    writeFileSync(out, html);
   }
-  mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, html);
 }
 
 writeFileSync(join(distDir, "sitemap.xml"), sitemap);
