@@ -9,6 +9,23 @@
       gtag('js', new Date());
       gtag('config', 'G-1P8LT831MG');
     </script>
+    <script id="legacy-hash-redirect">
+(function () {
+  var trips = ["rocky-mountain-national-park","guatemala","merida","olympic-national-park","panama","roatan","portugal","mexico-city"];
+  var path = (location.pathname || "/").replace(/\/index\.html$/, "").replace(/\/$/, "") || "/";
+  if (path !== "/travel") return;
+  var raw = (location.hash || "").replace(/^#/, "").replace(/^\/+/, "").replace(/\/+$/, "");
+  if (!raw || raw === "journal-main") return;
+  var dest = null;
+  if (raw === "recents") dest = "/travel/recents";
+  else if (raw.indexOf("recents/") === 0) {
+    var slug = raw.slice("recents/".length);
+    if (slug && slug.indexOf("/") === -1) dest = "/travel/recents/" + slug;
+  } else if (trips.indexOf(raw) !== -1) dest = "/travel/" + raw;
+  if (!dest) return;
+  location.replace(dest + location.search);
+})();
+</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="om9YE3ke0N9aDB8Ql9Wh-EmiqTUFda81Wusiyguavis" />
@@ -80,7 +97,7 @@
                   "@type": "TouristDestination",
                   "name": "Rocky Mountain National Park, United States",
                   "description": "Tundra, tarns, and the Continental Divide. Trail Ridge Road, Bear Lake, Glacier Gorge, and Moraine Park.",
-                  "url": "https://jainfam.net/travel/#rocky-mountain-national-park",
+                  "url": "https://jainfam.net/travel/rocky-mountain-national-park",
                   "image": "https://jainfam.net/travel/Assets/RMNP/DSC_3271.jpg"
                 }
               },
@@ -91,7 +108,7 @@
                   "@type": "TouristDestination",
                   "name": "Antigua & Lake Atitlán, Guatemala",
                   "description": "Holy Week in a colonial city ringed by volcanoes, alfombras, and Lake Atitlán.",
-                  "url": "https://jainfam.net/travel/#guatemala",
+                  "url": "https://jainfam.net/travel/guatemala",
                   "image": "https://jainfam.net/travel/Assets/Guatemala/10-L1004452.jpg"
                 }
               },
@@ -102,7 +119,7 @@
                   "@type": "TouristDestination",
                   "name": "Mérida, Mexico",
                   "description": "The capital of the Yucatan Peninsula. Historic center, Casa de Montejo, and colonial architecture.",
-                  "url": "https://jainfam.net/travel/#merida",
+                  "url": "https://jainfam.net/travel/merida",
                   "image": "https://jainfam.net/travel/Assets/Merida/IMG_1674.JPG"
                 }
               },
@@ -113,7 +130,7 @@
                   "@type": "TouristDestination",
                   "name": "Olympic National Park, United States",
                   "description": "Rainforest, coast, and peaks in the Pacific Northwest. Hoh Rainforest, Hurricane Ridge, and Lake Crescent.",
-                  "url": "https://jainfam.net/travel/#olympic-national-park",
+                  "url": "https://jainfam.net/travel/olympic-national-park",
                   "image": "https://jainfam.net/travel/Assets/OlympicNationalPark/IMG20250724120117.jpg"
                 }
               },
@@ -124,7 +141,7 @@
                   "@type": "TouristDestination",
                   "name": "Panama City & Casco Viejo, Panama",
                   "description": "Between oceans, high-rises, and jungle. Casco Viejo, Panama Canal, and Pacific skyline.",
-                  "url": "https://jainfam.net/travel/#panama",
+                  "url": "https://jainfam.net/travel/panama",
                   "image": "https://jainfam.net/travel/Assets/Panama/023D5074-17EE-439A-BEC5-1199BD3F8338.jpg"
                 }
               },
@@ -135,7 +152,7 @@
                   "@type": "TouristDestination",
                   "name": "Roatán, Honduras",
                   "description": "Caribbean island off the coast of Honduras. Mesoamerican Barrier Reef, warm water, and limestone walls.",
-                  "url": "https://jainfam.net/travel/#roatan",
+                  "url": "https://jainfam.net/travel/roatan",
                   "image": "https://jainfam.net/travel/Assets/Roatan/IMG_0692.jpg"
                 }
               },
@@ -146,7 +163,7 @@
                   "@type": "TouristDestination",
                   "name": "Lisbon & The Algarve, Portugal",
                   "description": "Where the ocean meets the old world. Lisbon rooftops, tram 24, Benagil Cave, and Ponta da Piedade.",
-                  "url": "https://jainfam.net/travel/#portugal",
+                  "url": "https://jainfam.net/travel/portugal",
                   "image": "https://jainfam.net/travel/Assets/Portugal/IMG_5547.jpg"
                 }
               },
@@ -157,7 +174,7 @@
                   "@type": "TouristDestination",
                   "name": "Mexico City, Mexico",
                   "description": "Tacos, stone stelae, and a city too big to leave. Museo Nacional de Antropología, Condesa, and markets.",
-                  "url": "https://jainfam.net/travel/#mexico-city",
+                  "url": "https://jainfam.net/travel/mexico-city",
                   "image": "https://jainfam.net/travel/Assets/Mexico City/000565330018.jpg"
                 }
               }

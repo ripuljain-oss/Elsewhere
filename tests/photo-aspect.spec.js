@@ -61,7 +61,7 @@ function failIfStretched(stretched) {
 
 test.describe("photo aspect ratio", () => {
   test("Mérida two-column journal keeps natural proportions", async ({ page }) => {
-    await page.goto("/travel/#merida");
+    await page.goto("/travel/merida");
     await expect(page.locator("h1")).toHaveText("Mérida");
 
     const pair = page.locator(".pair-grid img");
@@ -74,7 +74,7 @@ test.describe("photo aspect ratio", () => {
   });
 
   test("Guatemala journal photos keep natural proportions", async ({ page }) => {
-    await page.goto("/travel/#guatemala");
+    await page.goto("/travel/guatemala");
     await expect(page.locator("h1")).toHaveText("Antigua");
 
     const photos = page.locator(".photo-journal img");
@@ -87,7 +87,7 @@ test.describe("photo aspect ratio", () => {
   });
 
   test("Recents feed photos keep natural proportions", async ({ page }) => {
-    await page.goto("/travel/#recents");
+    await page.goto("/travel/recents");
     await expect(page.locator("h1")).toHaveText("Recent Photos");
 
     const photos = page.locator(".recents-feed-entry img");
@@ -100,7 +100,7 @@ test.describe("photo aspect ratio", () => {
   });
 
   test("lightbox photo keeps natural proportions", async ({ page }) => {
-    await page.goto("/travel/#merida");
+    await page.goto("/travel/merida");
     await expect(page.locator(".photo-journal img").first()).toBeVisible();
     await page.locator(".photo-journal img").first().click();
 

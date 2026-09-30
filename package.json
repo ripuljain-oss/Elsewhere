@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
-    "test": "node tests/css-height-auto.test.mjs && node tests/sitemap.test.mjs && npm run build && node tests/sitemap.test.mjs && playwright test",
+    "test": "node tests/css-height-auto.test.mjs && node tests/routes.test.mjs && node tests/sitemap.test.mjs && npm run build && node tests/sitemap.test.mjs && playwright test",
     "test:css": "node tests/css-height-auto.test.mjs"
   },
   "dependencies": {
