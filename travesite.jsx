@@ -10,7 +10,7 @@ const asset = (path) => {
   return `${BASE}${String(path).replace(/^\//, "")}`;
 };
 
-// Smaller JPEGs for above-the-fold heroes only. Journal/lightbox keep the full file.
+// Smaller JPEGs for cropped covers. Journal and lightbox keep the full file.
 const HERO_SOURCES = {
   "/Assets/RMNP/DSC_3271.jpg": "/Assets/RMNP/DSC_3271-hero.jpg",
 };
@@ -875,7 +875,7 @@ export default function Elsewhere() {
       <div className="card-photo" style={{ position: "absolute", inset: 0 }}>
         <PhotoPlaceholder
           trip={trip}
-          src={coverSrc}
+          src={heroSrc(coverSrc)}
           alt={altFromCaption(trip.imageCaptions?.[coverIdx >= 0 ? coverIdx : 0], trip.location)}
           style={{ width: "100%", height: "100%" }}
           loading="lazy"
@@ -1791,7 +1791,7 @@ export default function Elsewhere() {
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={prevTrip}
-                        src={prevTrip.coverImage || prevTrip.images?.[0]}
+                        src={heroSrc(prevTrip.coverImage || prevTrip.images?.[0])}
                         alt={altFromCaption(
                           prevTrip.imageCaptions?.[Math.max(0, prevTrip.images.indexOf(prevTrip.coverImage || prevTrip.images?.[0]))],
                           `${prevTrip.location}, ${prevTrip.country}`
@@ -1831,7 +1831,7 @@ export default function Elsewhere() {
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={nextTrip}
-                        src={nextTrip.coverImage || nextTrip.images?.[0]}
+                        src={heroSrc(nextTrip.coverImage || nextTrip.images?.[0])}
                         alt={altFromCaption(
                           nextTrip.imageCaptions?.[Math.max(0, nextTrip.images.indexOf(nextTrip.coverImage || nextTrip.images?.[0]))],
                           `${nextTrip.location}, ${nextTrip.country}`
