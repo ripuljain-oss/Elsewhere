@@ -29,6 +29,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Guard CSS height:auto
         run: node tests/css-height-auto.test.mjs
+      - name: Guard path routes
+        run: node tests/routes.test.mjs
       - name: Guard sitemap and robots
         run: node tests/sitemap.test.mjs
       - name: Build

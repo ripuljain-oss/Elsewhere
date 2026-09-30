@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { RECENTS as RECENTS_RAW } from "./recents";
 import { metaFor } from "./imageMeta";
+import {
+  buildHead,
+  isJournalRoot,
+  journalPath,
+  legacyHashToPath,
+  parseJournalPath,
+  slugify,
+} from "./journalRoutes";
 
 const BASE = import.meta.env.BASE_URL || "/";
 const asset = (path) => {
@@ -390,8 +398,6 @@ const RAW_TRIPS = [
   },
 ];
 
-const slugify = (id) => String(id).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
 const altFromCaption = (caption, fallback = "") => {
   if (!caption) return fallback;
   const match = caption.match(/^[^.!?]+[.!?]?/);
@@ -505,6 +511,55 @@ const formatRecentDate = (dateStr) => {
   return `${months[parseInt(m,10)-1]} ${parseInt(d,10)}, ${y}`;
 };
 
+function RouteLink({ href, onNavigate, className, style, children, ...rest }) {
+  return (
+    <a
+      href={href}
+      className={className}
+      style={style}
+      onClick={(event) => {
+        if (event.defaultPrevented || event.button !== 0) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        onNavigate();
+      }}
+      {...rest}
+    >
+      {children}
+    </a>
+  );
+}
+
+function readRoute() {
+  const slugs = TRIPS.map((trip) => trip.slug);
+  const onRoot = isJournalRoot(window.location.pathname);
+  const hashPath = onRoot ? legacyHashToPath(window.location.hash, slugs) : null;
+  const parsed = parseJournalPath(hashPath || window.location.pathname);
+  if (parsed.page === "home") return { page: "home", trip: null, recent: null };
+  if (parsed.page === "recents") return { page: "recents", trip: null, recent: null };
+  if (parsed.page === "trip") {
+    const trip = TRIPS.find((item) => item.slug === parsed.slug) || null;
+    return trip
+      ? { page: "trip", trip, recent: null }
+      : { page: "not-found", trip: null, recent: null };
+  }
+  if (parsed.page === "recent-detail") {
+    const recent = RECENTS.find((item) => item.slug === parsed.slug) || null;
+    return recent
+      ? { page: "recent-detail", trip: null, recent }
+      : { page: "not-found", trip: null, recent: null };
+  }
+  return { page: "not-found", trip: null, recent: null };
+}
+
+function pathsMatch(href) {
+  const norm = (value) => {
+    const path = String(value || "/").replace(/\/index\.html$/, "");
+    return path.length > 1 ? path.replace(/\/+$/, "") : path;
+  };
+  return norm(window.location.pathname) === norm(href) && !window.location.hash;
+}
+
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(() => {
     if (typeof window === "undefined" || !window.matchMedia) return false;
@@ -551,15 +606,16 @@ function RevealBlock({ children, delay = 0, style = {} }) {
 }
 
 export default function Elsewhere() {
-  const [page, setPage] = useState("home");
-  const [activeTrip, setActiveTrip] = useState(null);
+  const initialRoute = useState(() => readRoute())[0];
+  const [page, setPage] = useState(initialRoute.page);
+  const [activeTrip, setActiveTrip] = useState(initialRoute.trip);
   const [scrolled, setScrolled] = useState(false);
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroFading, setHeroFading] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [activeRecent, setActiveRecent] = useState(null);
+  const [activeRecent, setActiveRecent] = useState(initialRoute.recent);
   const prefersReducedMotion = usePrefersReducedMotion();
   const containerRef = useRef(null);
   const heroIntervalRef = useRef(null);
@@ -686,89 +742,58 @@ export default function Elsewhere() {
     }, 180);
   };
 
-  const clearHash = () => {
-    const path = window.location.pathname + window.location.search;
-    if (window.location.hash) history.pushState(null, "", path);
+  const go = (href, mutate) => {
+    fadeThen(() => {
+      mutate();
+      if (!pathsMatch(href)) history.pushState(null, "", href);
+    });
   };
 
   const navigateTo = (trip) => {
-    fadeThen(() => {
+    go(journalPath(trip.slug), () => {
       setActiveTrip(trip);
       setActiveRecent(null);
       setPage("trip");
-      window.location.hash = trip.slug;
     });
   };
 
   const navigateHome = () => {
-    fadeThen(() => {
+    go(journalPath(), () => {
       setPage("home");
       setActiveRecent(null);
       setActiveTrip(null);
-      clearHash();
     });
   };
 
   const navigateToRecents = () => {
-    fadeThen(() => {
+    go(journalPath("recents"), () => {
       setPage("recents");
       setActiveRecent(null);
       setActiveTrip(null);
-      window.location.hash = "recents";
     });
   };
 
   const navigateToRecent = (entry) => {
-    fadeThen(() => {
+    go(journalPath(`recents/${entry.slug}`), () => {
       setActiveRecent(entry);
       setActiveTrip(null);
       setPage("recent-detail");
-      window.location.hash = `recents/${entry.slug}`;
     });
   };
 
   useEffect(() => {
     const applyRoute = () => {
-      const hash = window.location.hash.replace(/^#/, "");
-      if (!hash) {
-        setPage("home");
-        setActiveTrip(null);
-        setActiveRecent(null);
-        setLightboxOpen(false);
-        return;
+      const slugs = TRIPS.map((trip) => trip.slug);
+      if (isJournalRoot(window.location.pathname)) {
+        const dest = legacyHashToPath(window.location.hash, slugs);
+        if (dest) history.replaceState(null, "", dest + window.location.search);
       }
-      if (hash.startsWith("recents/")) {
-        const slug = hash.slice("recents/".length);
-        const entry = RECENTS.find(r => r.slug === slug);
-        if (entry) {
-          setActiveRecent(entry);
-          setActiveTrip(null);
-          setPage("recent-detail");
-          return;
-        }
-        setPage("not-found");
-        setActiveTrip(null);
-        setActiveRecent(null);
-        setLightboxOpen(false);
-        return;
-      }
-      if (hash === "recents") {
-        setPage("recents");
-        setActiveRecent(null);
-        setActiveTrip(null);
-        return;
-      }
-      const trip = TRIPS.find(t => t.slug === hash);
-      if (trip) {
-        setActiveTrip(trip);
-        setActiveRecent(null);
-        setPage("trip");
-        return;
-      }
-      setPage("not-found");
-      setActiveTrip(null);
-      setActiveRecent(null);
+      const next = readRoute();
+      setPage(next.page);
+      setActiveTrip(next.trip);
+      setActiveRecent(next.recent);
       setLightboxOpen(false);
+      if (containerRef.current) containerRef.current.scrollTop = 0;
     };
     applyRoute();
     window.addEventListener("hashchange", applyRoute);
@@ -780,36 +805,14 @@ export default function Elsewhere() {
   }, []);
 
   useEffect(() => {
-    const site = "Elsewhere";
-    let title = `${site}, by Ripul Jain`;
-    let description = "A travel photo journal by Ripul Jain — destinations, recents, and field notes from the road.";
-    let canonical = "https://jainfam.net/travel/";
-    let image = "https://jainfam.net/travel/Assets/RMNP/DSC_3271.jpg";
-
-    if (page === "trip" && activeTrip) {
-      title = `${activeTrip.location} — ${site}`;
-      description = `${activeTrip.location}, ${activeTrip.country} (${activeTrip.year}): ${activeTrip.tagline || activeTrip.intro || ""}`.trim();
-      canonical = `https://jainfam.net/travel/#${activeTrip.slug}`;
-      const cover = activeTrip.coverImage || activeTrip.images?.[0];
-      if (cover) image = cover.startsWith("http") ? cover : `https://jainfam.net${cover.startsWith("/") ? "" : "/travel/"}${cover}`;
-    } else if (page === "recents") {
-      title = `Recents — ${site}`;
-      description = "Recent travel photos, field notes, and visual fragments by Ripul Jain.";
-      canonical = "https://jainfam.net/travel/#recents";
-    } else if (page === "recent-detail" && activeRecent) {
-      title = `${activeRecent.location} — ${site}`;
-      description = `${activeRecent.location}: ${activeRecent.caption || ""}`.trim();
-      canonical = `https://jainfam.net/travel/#recents/${activeRecent.slug}`;
-      if (activeRecent.image) {
-        image = activeRecent.image.startsWith("http")
-          ? activeRecent.image
-          : `https://jainfam.net${activeRecent.image.startsWith("/") ? "" : "/travel/"}${activeRecent.image}`;
-      }
-    } else if (page === "not-found") {
-      title = `Not found — ${site}`;
-    }
-
-    document.title = title;
+    const head = buildHead({
+      page,
+      trip: activeTrip,
+      recent: activeRecent,
+      trips: TRIPS,
+      recents: RECENTS,
+    });
+    document.title = head.title;
 
     const setMeta = (name, content, attr = "name") => {
       if (!content) return;
@@ -822,15 +825,15 @@ export default function Elsewhere() {
       el.setAttribute("content", content);
     };
 
-    setMeta("description", description, "name");
-    setMeta("og:title", title, "property");
-    setMeta("og:description", description, "property");
-    setMeta("og:url", canonical, "property");
-    setMeta("og:image", image, "property");
-    setMeta("og:type", page === "trip" || page === "recent-detail" ? "article" : "website", "property");
-    setMeta("twitter:title", title, "name");
-    setMeta("twitter:description", description, "name");
-    setMeta("twitter:image", image, "name");
+    setMeta("description", head.description, "name");
+    setMeta("og:title", head.title, "property");
+    setMeta("og:description", head.description, "property");
+    setMeta("og:url", head.canonical, "property");
+    setMeta("og:image", head.image, "property");
+    setMeta("og:type", head.ogType, "property");
+    setMeta("twitter:title", head.title, "name");
+    setMeta("twitter:description", head.description, "name");
+    setMeta("twitter:image", head.image, "name");
 
     let canonicalEl = document.querySelector('link[rel="canonical"]');
     if (!canonicalEl) {
@@ -838,7 +841,10 @@ export default function Elsewhere() {
       canonicalEl.setAttribute("rel", "canonical");
       document.head.appendChild(canonicalEl);
     }
-    canonicalEl.setAttribute("href", canonical);
+    canonicalEl.setAttribute("href", head.canonical);
+
+    const ld = document.querySelector('script[type="application/ld+json"]');
+    if (ld) ld.textContent = JSON.stringify(head.jsonLd);
   }, [page, activeTrip, activeRecent]);
 
   const changeHero = (i) => {
@@ -855,8 +861,11 @@ export default function Elsewhere() {
     const coverSrc = trip.coverImage || trip.images?.[0];
     const coverIdx = trip.images?.indexOf(coverSrc) ?? 0;
     return (
-    <button type="button" className="trip-card plain-btn" style={{ height: "100%" }}
-      onClick={() => navigateTo(trip)}
+    <RouteLink
+      href={journalPath(trip.slug)}
+      onNavigate={() => navigateTo(trip)}
+      className="trip-card plain-btn"
+      style={{ height: "100%" }}
       aria-label={`${trip.location}, ${trip.country} ${trip.year}`}
     >
       <div className="card-photo" style={{ position: "absolute", inset: 0 }}>
@@ -886,7 +895,7 @@ export default function Elsewhere() {
         }}>{trip.country} · {trip.year}</div>
         {trip.tagline && <div className="card-tagline">{trip.tagline}</div>}
       </div>
-    </button>
+    </RouteLink>
     );
   };
 
@@ -923,6 +932,7 @@ export default function Elsewhere() {
           font: inherit;
           color: inherit;
           text-align: inherit;
+          text-decoration: none;
           cursor: pointer;
         }
 
@@ -941,11 +951,14 @@ export default function Elsewhere() {
         }
 
         .trip-card {
+          display: block;
           cursor: pointer;
           position: relative;
           overflow: hidden;
           border-radius: 2px;
           width: 100%;
+          color: inherit;
+          text-decoration: none;
         }
         .trip-card .card-photo {
           width: 100%; height: 100%;
@@ -1001,6 +1014,7 @@ export default function Elsewhere() {
           cursor: pointer;
           transition: color 0.3s ease;
           position: relative;
+          text-decoration: none;
         }
         .nav-item::after {
           content: '';
@@ -1020,6 +1034,7 @@ export default function Elsewhere() {
           gap: 10px;
           transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
           color: #8A8780;
+          text-decoration: none;
         }
         .back-link:hover { color: #C8A96E; letter-spacing: 2.5px; }
         .back-link:hover .arrow { transform: translateX(-6px); }
@@ -1174,6 +1189,7 @@ export default function Elsewhere() {
           background: rgba(0,0,0,0.22);
           backdrop-filter: blur(6px);
           cursor: pointer;
+          text-decoration: none;
           transition: all 0.4s cubic-bezier(0.22,1,0.36,1);
           animation: fadeUp 1s cubic-bezier(0.22,1,0.36,1) 0.7s both;
         }
@@ -1194,6 +1210,7 @@ export default function Elsewhere() {
           padding: 0 48px;
         }
         .trip-nav-card {
+          display: block;
           position: relative;
           overflow: hidden;
           cursor: pointer;
@@ -1201,6 +1218,8 @@ export default function Elsewhere() {
           border-radius: 2px;
           width: 100%;
           text-align: left;
+          color: inherit;
+          text-decoration: none;
         }
         .trip-nav-card .nav-photo {
           width: 100%; height: 100%;
@@ -1223,11 +1242,14 @@ export default function Elsewhere() {
           gap: 20px;
         }
         .recent-card {
+          display: block;
           cursor: pointer;
           overflow: hidden;
           position: relative;
           width: 100%;
           text-align: left;
+          color: inherit;
+          text-decoration: none;
         }
         .recent-card .recent-image {
           aspect-ratio: 3 / 2;
@@ -1254,7 +1276,10 @@ export default function Elsewhere() {
           padding: 60px 48px 100px;
         }
         .recents-feed-entry {
+          display: block;
           margin-bottom: 96px;
+          color: inherit;
+          text-decoration: none;
         }
         .recents-feed-entry img {
           width: 100%;
@@ -1337,7 +1362,7 @@ export default function Elsewhere() {
         borderBottom: scrolled ? "1px solid rgba(26,26,24,0.08)" : "1px solid transparent",
         transition: "all 0.6s cubic-bezier(0.22,1,0.36,1)",
       }}>
-        <button type="button" className="header-brand plain-btn" onClick={navigateHome} style={{
+        <RouteLink href={journalPath()} onNavigate={navigateHome} className="header-brand plain-btn" style={{
           cursor: "pointer",
           display: "flex", alignItems: "baseline", gap: "14px",
           transition: "color 0.5s ease",
@@ -1357,7 +1382,7 @@ export default function Elsewhere() {
           }}>
             by Ripul Jain
           </span>
-        </button>
+        </RouteLink>
         <div style={{
           display: "flex", alignItems: "center", gap: "22px",
           fontFamily: "'DM Sans', sans-serif",
@@ -1366,9 +1391,9 @@ export default function Elsewhere() {
           transition: "color 0.5s ease",
           textShadow: overPhotoHero ? "0 1px 16px rgba(0,0,0,0.45)" : "none",
         }}>
-          <button type="button" className="nav-item plain-btn" onClick={navigateToRecents} style={{ cursor: "pointer" }}>
+          <RouteLink href={journalPath("recents")} onNavigate={navigateToRecents} className="nav-item plain-btn" style={{ cursor: "pointer" }}>
             Recents
-          </button>
+          </RouteLink>
         </div>
       </header>
 
@@ -1462,15 +1487,13 @@ export default function Elsewhere() {
                 }}>
                   {TRIPS[heroIdx].tagline}
                 </p>
-                <div
+                <RouteLink
                   className="hero-cta"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigateTo(TRIPS[heroIdx])}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigateTo(TRIPS[heroIdx]); } }}
+                  href={journalPath(TRIPS[heroIdx].slug)}
+                  onNavigate={() => navigateTo(TRIPS[heroIdx])}
                 >
                   Open journal <span className="arrow">→</span>
-                </div>
+                </RouteLink>
               </div>
 
               {/* Dots */}
@@ -1562,24 +1585,24 @@ export default function Elsewhere() {
                         textTransform: "uppercase", fontWeight: 400,
                       }}>Mostly shot on mobile</div>
                     </div>
-                    <button type="button" onClick={navigateToRecents} className="nav-item plain-btn" style={{
+                    <RouteLink href={journalPath("recents")} onNavigate={navigateToRecents} className="nav-item plain-btn" style={{
                       cursor: "pointer", whiteSpace: "nowrap",
                       color: "#8A8780", fontSize: "10px", letterSpacing: "2.5px",
                       textTransform: "uppercase", fontWeight: 400,
-                    }}>See all →</button>
+                    }}>See all →</RouteLink>
                   </div>
                 </RevealBlock>
                 <div className="recents-grid" style={{ marginTop: "20px" }}>
                   {RECENTS.slice(0, 3).map((entry, i) => (
                     <RevealBlock key={entry.slug} delay={i * 0.06}>
-                      <button type="button" className="recent-card plain-btn" onClick={() => navigateToRecent(entry)} aria-label={`${entry.location}, ${formatRecentDate(entry.date)}`}>
+                      <RouteLink href={journalPath(`recents/${entry.slug}`)} onNavigate={() => navigateToRecent(entry)} className="recent-card plain-btn" aria-label={`${entry.location}, ${formatRecentDate(entry.date)}`}>
                         <div className="recent-image">
                           <img src={entry.image} alt={altFromCaption(entry.caption, entry.location)} loading="lazy" decoding="async" {...dimAttrs(entry.image)} />
                         </div>
                         <div className="recent-meta">
                           {formatRecentDate(entry.date)} · {entry.location}
                         </div>
-                      </button>
+                      </RouteLink>
                     </RevealBlock>
                   ))}
                 </div>
@@ -1756,11 +1779,11 @@ export default function Elsewhere() {
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   borderTop: "1px solid rgba(26,26,24,0.08)", paddingTop: "36px",
                 }}>
-                  <button type="button" className="back-link plain-btn" onClick={navigateHome} style={{
+                  <RouteLink href={journalPath()} onNavigate={navigateHome} className="back-link plain-btn" style={{
                     fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
                   }}>
                     <span className="arrow">←</span> All trips
-                  </button>
+                  </RouteLink>
                   <span style={{
                     color: "#8A8780", fontSize: "10px", letterSpacing: "3px",
                     textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif",
@@ -1774,7 +1797,7 @@ export default function Elsewhere() {
               <div className="trip-nav">
                 {!prevTrip && nextTrip && <div />}
                 {prevTrip && (
-                  <button type="button" className="trip-nav-card plain-btn" onClick={() => navigateTo(prevTrip)} aria-label={`Previous: ${prevTrip.location}`}>
+                  <RouteLink href={journalPath(prevTrip.slug)} onNavigate={() => navigateTo(prevTrip)} className="trip-nav-card plain-btn" aria-label={`Previous: ${prevTrip.location}`}>
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={prevTrip}
@@ -1811,10 +1834,10 @@ export default function Elsewhere() {
                         {prevTrip.country} · {prevTrip.year}
                       </div>
                     </div>
-                  </button>
+                  </RouteLink>
                 )}
                 {nextTrip && (
-                  <button type="button" className="trip-nav-card plain-btn" onClick={() => navigateTo(nextTrip)} aria-label={`Next: ${nextTrip.location}`}>
+                  <RouteLink href={journalPath(nextTrip.slug)} onNavigate={() => navigateTo(nextTrip)} className="trip-nav-card plain-btn" aria-label={`Next: ${nextTrip.location}`}>
                     <div className="nav-photo">
                       <PhotoPlaceholder
                         trip={nextTrip}
@@ -1851,7 +1874,7 @@ export default function Elsewhere() {
                         {nextTrip.country} · {nextTrip.year}
                       </div>
                     </div>
-                  </button>
+                  </RouteLink>
                 )}
               </div>
             </RevealBlock>
@@ -1908,20 +1931,23 @@ export default function Elsewhere() {
             <div className="recents-feed">
               {RECENTS.map((entry, i) => (
                 <RevealBlock key={entry.slug} delay={Math.min(0.2, i * 0.04)}>
-                  <div className="recents-feed-entry">
+                  <RouteLink
+                    href={journalPath(`recents/${entry.slug}`)}
+                    onNavigate={() => navigateToRecent(entry)}
+                    className="recents-feed-entry"
+                  >
                     <img
                       src={entry.image}
                       alt={altFromCaption(entry.caption, entry.location)}
                       loading="lazy"
                       decoding="async"
                       {...dimAttrs(entry.image)}
-                      onClick={() => navigateToRecent(entry)}
                     />
                     <div className="entry-meta">
                       {formatRecentDate(entry.date)} · {entry.location}
                     </div>
                     <p className="entry-caption">{entry.caption}</p>
-                  </div>
+                  </RouteLink>
                 </RevealBlock>
               ))}
             </div>
@@ -1931,11 +1957,11 @@ export default function Elsewhere() {
                 <div style={{
                   borderTop: "1px solid rgba(26,26,24,0.08)", paddingTop: "36px",
                 }}>
-                  <button type="button" className="back-link plain-btn" onClick={navigateHome} style={{
+                  <RouteLink href={journalPath()} onNavigate={navigateHome} className="back-link plain-btn" style={{
                     fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
                   }}>
                     <span className="arrow">←</span> All destinations
-                  </button>
+                  </RouteLink>
                 </div>
               </RevealBlock>
             </div>
@@ -1958,11 +1984,11 @@ export default function Elsewhere() {
               maxWidth: "1140px", margin: "0 auto", padding: "140px 48px 28px",
             }}>
               <RevealBlock>
-                <button type="button" className="back-link plain-btn" onClick={navigateToRecents} style={{
+                <RouteLink href={journalPath("recents")} onNavigate={navigateToRecents} className="back-link plain-btn" style={{
                   fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
                 }}>
                   <span className="arrow">←</span> All recents
-                </button>
+                </RouteLink>
               </RevealBlock>
             </div>
 
@@ -2038,11 +2064,11 @@ export default function Elsewhere() {
                 width: "36px", height: "1px", background: "rgba(42,40,34,0.2)",
                 margin: "28px auto",
               }} />
-              <button type="button" className="back-link plain-btn" onClick={navigateHome} style={{
+              <RouteLink href={journalPath()} onNavigate={navigateHome} className="back-link plain-btn" style={{
                 fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase",
               }}>
                 <span className="arrow">←</span> All destinations
-              </button>
+              </RouteLink>
             </div>
             <footer style={{
               borderTop: "1px solid rgba(26,26,24,0.06)",
